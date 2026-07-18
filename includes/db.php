@@ -22,6 +22,6 @@ function db(): PDO
         return $pdo;
     } catch (PDOException $e) {
         http_response_code(500);
-        exit('Error de conexión a la base de datos. Revisa config.php.');
+        exit('Error de conexión a la base de datos. Revisa las variables de entorno.');
     }
 }
