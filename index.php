@@ -182,6 +182,7 @@ include __DIR__ . '/includes/header.php';
 
       <div class="grid">
         <?php foreach ($items as $dress): ?>
+          <?php $productUrl = BASE_URL . '/product.php?id=' . (int)$dress['id']; ?>
           <article
             id="prenda-<?= (int)$dress['id'] ?>"
             class="dress-card <?= $dress['status'] === 'sold' ? 'is-sold' : '' ?>"
@@ -244,7 +245,7 @@ include __DIR__ . '/includes/header.php';
             </div>
 
             <div class="dress-info">
-              <h3><?= e($dress['name']) ?></h3>
+              <h3><a class="product-name-link" href="<?= e($productUrl) ?>"><?= e($dress['name']) ?></a></h3>
               <div class="meta">
                 <span class="badge category"><?= e((string)$dress['category']) ?></span>
                 <span class="badge <?= $dress['status'] === 'sold' ? 'sold' : 'available' ?>"><?= status_label($dress['status']) ?></span>
@@ -254,11 +255,13 @@ include __DIR__ . '/includes/header.php';
               </div>
 
               <div class="card-actions">
+                <a class="btn primary small product-detail-link" href="<?= e($productUrl) ?>">Ver detalles</a>
                 <button
                   class="btn soft small share-product"
                   type="button"
                   data-share-product
                   data-product-id="<?= (int)$dress['id'] ?>"
+                  data-product-url="<?= e($productUrl) ?>"
                   data-product-name="<?= e($dress['name']) ?>"
                   data-product-category="<?= e((string)$dress['category']) ?>"
                   data-product-size="<?= e((string)$dress['size']) ?>"
