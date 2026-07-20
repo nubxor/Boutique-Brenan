@@ -49,6 +49,108 @@ function status_label(string $status): string
     return $status === 'sold' ? 'Vendido' : 'Disponible';
 }
 
+
+/**
+ * Categorías sugeridas para el catálogo. También pueden registrarse categorías
+ * personalizadas desde el panel administrativo.
+ */
+function default_categories(): array
+{
+    return [
+        'Vestidos',
+        'Pijamas',
+        'Conjuntos',
+        'Blusas',
+        'Faldas',
+        'Pantalones',
+        'Accesorios',
+        'Otros',
+    ];
+}
+
+function normalize_category(?string $category): string
+{
+    $category = trim((string)$category);
+    if ($category === '') {
+        return 'Otros';
+    }
+
+    return function_exists('mb_substr')
+        ? mb_substr($category, 0, 60, 'UTF-8')
+        : substr($category, 0, 60);
+}
+
+/**
+ * Actualiza automáticamente la tabla existente para incorporar categorías.
+ * Las prendas actuales se clasifican por palabras de su nombre y, cuando no
+ * hay coincidencia, permanecen en Vestidos para conservar el catálogo previo.
+ */
+function ensure_categories_schema(PDO $pdo): void
+{
+    static $ready = false;
+    if ($ready) {
+        return;
+    }
+
+    $column = $pdo->query("SHOW COLUMNS FROM dresses LIKE 'category'")->fetch();
+
+    if (!$column) {
+        try {
+            $pdo->exec("ALTER TABLE dresses ADD COLUMN category VARCHAR(60) NOT NULL DEFAULT 'Vestidos' AFTER name, ADD INDEX idx_category (category)");
+
+            $rules = [
+                'Pijamas' => ['pijama', 'bata', 'dormir'],
+                'Conjuntos' => ['conjunto', 'set '],
+                'Blusas' => ['blusa', 'camisa', 'top '],
+                'Faldas' => ['falda'],
+                'Pantalones' => ['pantalón', 'pantalon', 'jean', 'short'],
+                'Accesorios' => ['bolsa', 'cartera', 'collar', 'pulsera', 'arete', 'accesorio'],
+            ];
+
+            foreach ($rules as $category => $words) {
+                $conditions = [];
+                $params = [':category' => $category];
+                foreach ($words as $index => $word) {
+                    $key = ':word' . $index;
+                    $conditions[] = 'LOWER(name) LIKE ' . $key;
+                    $params[$key] = '%' . $word . '%';
+                }
+
+                $stmt = $pdo->prepare('UPDATE dresses SET category = :category WHERE ' . implode(' OR ', $conditions));
+                $stmt->execute($params);
+            }
+        } catch (PDOException $e) {
+            throw new RuntimeException(
+                'No fue posible activar las categorías automáticamente. Revisa que el usuario de la base de datos tenga permiso ALTER.',
+                0,
+                $e
+            );
+        }
+    }
+
+    $ready = true;
+}
+
+function get_categories(PDO $pdo, bool $includeDefaults = true): array
+{
+    ensure_categories_schema($pdo);
+
+    $stmt = $pdo->query("SELECT DISTINCT category FROM dresses WHERE category IS NOT NULL AND category <> '' ORDER BY category ASC");
+    $stored = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    $categories = $includeDefaults ? array_merge(default_categories(), $stored) : $stored;
+
+    $result = [];
+    foreach ($categories as $category) {
+        $category = normalize_category((string)$category);
+        if ($category !== '' && !in_array($category, $result, true)) {
+            $result[] = $category;
+        }
+    }
+
+    natcasesort($result);
+    return array_values($result);
+}
+
 function get_sizes(PDO $pdo): array
 {
     $base = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Única'];
@@ -670,13 +772,18 @@ function build_public_query(PDO $pdo, array $filters): array
         $params[':status'] = $filters['status'];
     }
 
+    if (!empty($filters['category']) && $filters['category'] !== 'all') {
+        $where[] = 'category = :category';
+        $params[':category'] = $filters['category'];
+    }
+
     if (!empty($filters['size']) && $filters['size'] !== 'all') {
         $where[] = 'size = :size';
         $params[':size'] = $filters['size'];
     }
 
     if (!empty($filters['q'])) {
-        $where[] = '(name LIKE :q OR size LIKE :q)';
+        $where[] = '(name LIKE :q OR size LIKE :q OR category LIKE :q)';
         $params[':q'] = '%' . $filters['q'] . '%';
     }
 
@@ -699,6 +806,7 @@ function build_public_query(PDO $pdo, array $filters): array
         'price-asc' => 'price ASC, created_at DESC',
         'price-desc' => 'price DESC, created_at DESC',
         'size' => "FIELD(size,'XS','S','M','L','XL','XXL','Única'), size ASC, price ASC",
+        'category' => 'category ASC, created_at DESC',
         'sold-date' => 'sold_date DESC, created_at DESC',
         default => 'created_at DESC'
     };

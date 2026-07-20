@@ -9,9 +9,11 @@ require_login();
 verify_csrf();
 
 $pdo = db();
+ensure_categories_schema($pdo);
 
 $id = (int)($_POST['id'] ?? 0);
 $name = trim((string)($_POST['name'] ?? ''));
+$category = normalize_category((string)($_POST['category'] ?? ''));
 $size = trim((string)($_POST['size'] ?? ''));
 $price = (float)($_POST['price'] ?? 0);
 $status = (string)($_POST['status'] ?? 'available');
@@ -19,7 +21,7 @@ $soldDate = trim((string)($_POST['sold_date'] ?? ''));
 $imageFit = (string)($_POST['image_fit'] ?? 'cover');
 $currentImage = trim((string)($_POST['current_image'] ?? ''));
 
-if ($name === '' || $size === '' || $price < 0) {
+if ($name === '' || $category === '' || $size === '' || $price < 0) {
     exit('Faltan datos obligatorios.');
 }
 
@@ -48,9 +50,10 @@ try {
 $image = $newImage ?: $currentImage;
 
 if ($id > 0) {
-    $stmt = $pdo->prepare("UPDATE dresses SET name=:name, size=:size, price=:price, status=:status, sold_date=:sold_date, image=:image, image_fit=:image_fit, updated_at=NOW() WHERE id=:id");
+    $stmt = $pdo->prepare("UPDATE dresses SET name=:name, category=:category, size=:size, price=:price, status=:status, sold_date=:sold_date, image=:image, image_fit=:image_fit, updated_at=NOW() WHERE id=:id");
     $stmt->execute([
         ':name' => $name,
+        ':category' => $category,
         ':size' => $size,
         ':price' => $price,
         ':status' => $status,
@@ -64,12 +67,13 @@ if ($id > 0) {
         delete_image_if_exists($currentImage);
     }
 
-    redirect('/admin/index.php?message=Prenda actualizado correctamente');
+    redirect('/admin/index.php?message=Prenda actualizada correctamente');
 }
 
-$stmt = $pdo->prepare("INSERT INTO dresses (name, size, price, status, sold_date, image, image_fit, created_at, updated_at) VALUES (:name, :size, :price, :status, :sold_date, :image, :image_fit, NOW(), NOW())");
+$stmt = $pdo->prepare("INSERT INTO dresses (name, category, size, price, status, sold_date, image, image_fit, created_at, updated_at) VALUES (:name, :category, :size, :price, :status, :sold_date, :image, :image_fit, NOW(), NOW())");
 $stmt->execute([
     ':name' => $name,
+    ':category' => $category,
     ':size' => $size,
     ':price' => $price,
     ':status' => $status,
@@ -78,4 +82,4 @@ $stmt->execute([
     ':image_fit' => $imageFit,
 ]);
 
-redirect('/admin/index.php?message=Prenda agregado correctamente');
+redirect('/admin/index.php?message=Prenda agregada correctamente');

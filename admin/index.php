@@ -8,6 +8,7 @@ require_once __DIR__ . '/../includes/functions.php';
 require_login();
 
 $pdo = db();
+ensure_categories_schema($pdo);
 
 $stmt = $pdo->query("SELECT * FROM dresses ORDER BY created_at DESC");
 $dresses = $stmt->fetchAll();
@@ -58,6 +59,7 @@ include __DIR__ . '/../includes/header.php';
           <tr>
             <th>Foto</th>
             <th>Prenda</th>
+            <th>Categoría</th>
             <th>Talla</th>
             <th>Precio</th>
             <th>Estado</th>
@@ -67,7 +69,7 @@ include __DIR__ . '/../includes/header.php';
         </thead>
         <tbody>
           <?php if (!$dresses): ?>
-            <tr><td colspan="7">No hay prendas registradas.</td></tr>
+            <tr><td colspan="8">No hay prendas registradas.</td></tr>
           <?php endif; ?>
 
           <?php foreach ($dresses as $dress): ?>
@@ -88,6 +90,7 @@ include __DIR__ . '/../includes/header.php';
                 <?php endif; ?>
               </td>
               <td><strong><?= e($dress['name']) ?></strong></td>
+              <td><span class="badge category"><?= e((string)$dress['category']) ?></span></td>
               <td><?= e($dress['size']) ?></td>
               <td><?= money_mx($dress['price']) ?></td>
               <td><span class="badge <?= $dress['status'] === 'sold' ? 'sold' : 'available' ?>"><?= status_label($dress['status']) ?></span></td>

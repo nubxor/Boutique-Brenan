@@ -8,10 +8,13 @@ require_once __DIR__ . '/../includes/functions.php';
 require_login();
 
 $pdo = db();
+ensure_categories_schema($pdo);
+$categories = get_categories($pdo, true);
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $dress = [
     'id' => 0,
     'name' => '',
+    'category' => 'Vestidos',
     'size' => 'M',
     'price' => '',
     'status' => 'available',
@@ -49,7 +52,7 @@ include __DIR__ . '/../includes/header.php';
       <span class="logo">BB</span>
       <span>
         <strong>Brenan Boutique</strong>
-        <small><?= $id > 0 ? 'Editar prenda' : 'Nuevo prenda' ?></small>
+        <small><?= $id > 0 ? 'Editar prenda' : 'Nueva prenda' ?></small>
       </span>
     </a>
 
@@ -64,7 +67,7 @@ include __DIR__ . '/../includes/header.php';
   <section class="form-panel">
     <div class="panel-head">
       <h1><?= $id > 0 ? 'Editar prenda' : 'Agregar prenda' ?></h1>
-      <p>Registra la fotografía, talla, precio y disponibilidad del prenda.</p>
+      <p>Registra la categoría, fotografía, talla, precio y disponibilidad de la prenda.</p>
     </div>
 
     <form class="dress-form" method="post" action="<?= BASE_URL ?>/admin/save.php" enctype="multipart/form-data">
@@ -105,6 +108,16 @@ include __DIR__ . '/../includes/header.php';
 
           <div class="two">
             <label>
+              <span>Categoría</span>
+              <input list="category-options" name="category" value="<?= e((string)$dress['category']) ?>" required placeholder="Vestidos">
+              <datalist id="category-options">
+                <?php foreach ($categories as $category): ?>
+                  <option value="<?= e($category) ?>">
+                <?php endforeach; ?>
+              </datalist>
+            </label>
+
+            <label>
               <span>Talla</span>
               <input list="size-options" name="size" value="<?= e($dress['size']) ?>" required placeholder="M">
               <datalist id="size-options">
@@ -113,14 +126,14 @@ include __DIR__ . '/../includes/header.php';
                 <?php endforeach; ?>
               </datalist>
             </label>
+          </div>
 
+          <div class="two">
             <label>
               <span>Precio</span>
               <input type="number" name="price" min="0" step="1" value="<?= e((string)$dress['price']) ?>" required placeholder="850">
             </label>
-          </div>
 
-          <div class="two">
             <label>
               <span>Estado</span>
               <select name="status">
@@ -128,20 +141,22 @@ include __DIR__ . '/../includes/header.php';
                 <option value="sold" <?= selected($dress['status'], 'sold') ?>>Vendido</option>
               </select>
             </label>
+          </div>
 
+          <div class="two">
             <label>
               <span>Fecha de venta</span>
               <input type="date" name="sold_date" value="<?= e((string)$dress['sold_date']) ?>">
             </label>
-          </div>
 
-          <label>
-            <span>Ajuste de fotografía</span>
-            <select name="image_fit">
-              <option value="cover" <?= selected($dress['image_fit'], 'cover') ?>>Recorte elegante</option>
-              <option value="contain" <?= selected($dress['image_fit'], 'contain') ?>>Imagen completa</option>
-            </select>
-          </label>
+            <label>
+              <span>Ajuste de fotografía</span>
+              <select name="image_fit">
+                <option value="cover" <?= selected($dress['image_fit'], 'cover') ?>>Recorte elegante</option>
+                <option value="contain" <?= selected($dress['image_fit'], 'contain') ?>>Imagen completa</option>
+              </select>
+            </label>
+          </div>
 
           <div class="form-actions">
             <button class="btn primary" type="submit">Guardar prenda</button>
