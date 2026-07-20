@@ -65,7 +65,7 @@ include __DIR__ . '/includes/header.php';
     <section class="hero-card">
       <div>
         <span class="eyebrow">✦ Colección disponible</span>
-        <h1>Vestidos listos para compartir con tus clientas.</h1>
+        <h1>Prendas seleccionadas para hacer especial cada momento.</h1>
         <p>Consulta vestidos por talla, precio y disponibilidad. Las fotografías se ajustan al catálogo sin deformarse y cada tarjeta muestra claramente talla y precio.</p>
 
         <div class="hero-buttons">
