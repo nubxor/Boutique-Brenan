@@ -1,8 +1,12 @@
 <footer class="site-footer">
   <div class="wrap">
-    <p>Brenan Boutique · Catálogo digital de vestidos</p>
+    <p>Brenan Boutique · Catálogo digital de prendas</p>
   </div>
 </footer>
-<script defer src="<?= BASE_URL ?>/assets/js/app.js?v=<?= (int)filemtime(__DIR__ . '/../assets/js/app.js') ?>"></script>
+<?php
+$jsPath = __DIR__ . '/../assets/js/app.js';
+$jsVersion = is_file($jsPath) ? (int)filemtime($jsPath) : 1;
+?>
+<script defer src="<?= BASE_URL ?>/assets/js/app.js?v=<?= $jsVersion ?>"></script>
 </body>
 </html>

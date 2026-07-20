@@ -48,7 +48,7 @@ include __DIR__ . '/includes/header.php';
         <span class="logo">BB</span>
         <span>
           <strong>Brenan Boutique</strong>
-          <small>Catálogo digital de vestidos</small>
+          <small>Catálogo digital de prendas</small>
         </span>
       </a>
 
@@ -56,8 +56,6 @@ include __DIR__ . '/includes/header.php';
         <a class="btn" href="#catalogo">Ver catálogo</a>
         <?php if (is_logged_in()): ?>
           <a class="btn primary" href="<?= BASE_URL ?>/admin/index.php">Panel administrativo</a>
-        <?php else: ?>
-          <a class="btn primary" href="<?= BASE_URL ?>/admin/login.php">Administrar</a>
         <?php endif; ?>
       </div>
     </nav>
@@ -66,11 +64,13 @@ include __DIR__ . '/includes/header.php';
       <div>
         <span class="eyebrow">✦ Colección disponible</span>
         <h1>Prendas seleccionadas para hacer especial cada momento.</h1>
-        <p>Consulta vestidos por talla, precio y disponibilidad. Las fotografías se ajustan al catálogo sin deformarse y cada tarjeta muestra claramente talla y precio.</p>
+        <p>Consulta prendas por talla, precio y disponibilidad. Las fotografías se ajustan al catálogo sin deformarse y cada tarjeta muestra claramente la talla y el precio.</p>
 
         <div class="hero-buttons">
-          <a class="btn primary" href="#catalogo">Explorar vestidos</a>
-          <a class="btn" href="<?= BASE_URL ?>/admin/login.php">Entrar al panel</a>
+          <a class="btn primary" href="#catalogo">Explorar prendas</a>
+          <?php if (is_logged_in()): ?>
+            <a class="btn" href="<?= BASE_URL ?>/admin/index.php">Entrar al panel</a>
+          <?php endif; ?>
         </div>
       </div>
 
@@ -148,8 +148,8 @@ include __DIR__ . '/includes/header.php';
 <main class="wrap catalog">
   <?php if (!$dresses): ?>
     <div class="empty">
-      <h2>No hay vestidos con esos filtros</h2>
-      <p>Ajusta la búsqueda o agrega vestidos desde el panel administrativo.</p>
+      <h2>No hay prendas con esos filtros</h2>
+      <p>Ajusta la búsqueda o agrega prendas desde el panel administrativo.</p>
     </div>
   <?php endif; ?>
 
@@ -158,7 +158,7 @@ include __DIR__ . '/includes/header.php';
       <div class="section-head">
         <div>
           <h2><?= e($title) ?></h2>
-          <p><?= count($items) ?> vestido<?= count($items) === 1 ? '' : 's' ?> encontrado<?= count($items) === 1 ? '' : 's' ?></p>
+          <p><?= count($items) ?> prenda<?= count($items) === 1 ? '' : 's' ?> encontrada<?= count($items) === 1 ? '' : 's' ?></p>
         </div>
         <span class="pill"><?= str_contains($title, 'Vendidos') ? 'Historial' : 'Disponible' ?></span>
       </div>

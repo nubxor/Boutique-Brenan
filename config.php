@@ -1,14 +1,10 @@
 <?php
 /**
- * GALLETITAS - CONFIGURACIÓN GENERAL
+ * BRENAN BOUTIQUE - CONFIGURACIÓN GENERAL
  */
 
 declare(strict_types=1);
 
-/**
- * Carga las variables del archivo .env sin sobrescribir las variables que el
- * servidor ya haya definido.
- */
 function load_env(string $path): void
 {
     if (!is_file($path) || !is_readable($path)) {
@@ -22,14 +18,12 @@ function load_env(string $path): void
 
     foreach ($lines as $line) {
         $line = trim($line);
-
         if ($line === '' || str_starts_with($line, '#')) {
             continue;
         }
 
         [$name, $value] = array_pad(explode('=', $line, 2), 2, '');
         $name = trim($name);
-
         if ($name === '' || getenv($name) !== false) {
             continue;
         }
@@ -52,43 +46,36 @@ function load_env(string $path): void
 function env(string $name, ?string $default = null): string
 {
     $value = getenv($name);
-
     if ($value === false) {
         if ($default !== null) {
             return $default;
         }
-
         throw new RuntimeException("La variable de entorno {$name} no está definida.");
     }
-
     return $value;
 }
 
 load_env(__DIR__ . '/.env');
 
-// Datos de conexión MySQL.
 define('DB_HOST', env('DB_HOST'));
 define('DB_NAME', env('DB_NAME'));
 define('DB_USER', env('DB_USER'));
 define('DB_PASS', env('DB_PASS'));
 define('DB_CHARSET', env('DB_CHARSET', 'utf8mb4'));
 
-// URL base del catálogo.
-// Si lo instalas en la raíz del dominio, deja: ''
-// Si lo instalas en una carpeta, por ejemplo /catalogo, escribe: '/catalogo'
 define('BASE_URL', '');
 
-// Carpeta donde se guardan las imágenes.
 define('UPLOAD_DIR', __DIR__ . '/uploads');
 define('UPLOAD_URL', BASE_URL . '/uploads');
-
-// Tamaño máximo de imagen en bytes. 5 MB.
 define('MAX_IMAGE_SIZE', 5 * 1024 * 1024);
 
-// Usuario inicial del panel.
-// IMPORTANTE: cambia esta contraseña después de instalar.
-define('DEFAULT_ADMIN_USER', 'admin');
-define('DEFAULT_ADMIN_PASS', 'admin123');
+// Acceso administrativo. La contraseña se almacena únicamente como hash.
+define('ADMIN_USER', env('ADMIN_USER', 'admin'));
+define('ADMIN_PASSWORD_HASH', env('ADMIN_PASSWORD_HASH', '$2y$12$.0yhfd5PQfVkrm0XqOsZLeLj590X.oqGlT/vd.HctQdDa2V1m0KPe'));
 
-// Seguridad de sesión.
-define('SESSION_NAME', 'galletitas_admin_session');
+// Protección del inicio de sesión.
+define('LOGIN_MAX_ATTEMPTS', 5);
+define('LOGIN_ATTEMPT_WINDOW', 15 * 60);
+define('LOGIN_LOCKOUT_SECONDS', 15 * 60);
+define('SESSION_IDLE_TIMEOUT', 30 * 60);
+define('SESSION_NAME', 'brenan_boutique_admin_session');

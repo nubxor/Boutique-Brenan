@@ -38,12 +38,12 @@ include __DIR__ . '/../includes/header.php';
 <main class="wrap admin-page">
   <div class="section-head">
     <div>
-      <h1>Vestidos registrados</h1>
-      <p>Agrega, edita, elimina y marca vestidos como vendidos.</p>
+      <h1>Prendas registradas</h1>
+      <p>Agrega, edita, elimina y administra la disponibilidad de las prendas.</p>
     </div>
     <div class="top-actions">
       <a class="btn" href="<?= BASE_URL ?>/admin/optimize-images.php">Reparar y optimizar imágenes</a>
-      <a class="btn primary" href="<?= BASE_URL ?>/admin/dress-form.php">+ Agregar vestido</a>
+      <a class="btn primary" href="<?= BASE_URL ?>/admin/dress-form.php">+ Agregar prenda</a>
     </div>
   </div>
 
@@ -57,7 +57,7 @@ include __DIR__ . '/../includes/header.php';
         <thead>
           <tr>
             <th>Foto</th>
-            <th>Vestido</th>
+            <th>Prenda</th>
             <th>Talla</th>
             <th>Precio</th>
             <th>Estado</th>
@@ -67,7 +67,7 @@ include __DIR__ . '/../includes/header.php';
         </thead>
         <tbody>
           <?php if (!$dresses): ?>
-            <tr><td colspan="7">No hay vestidos registrados.</td></tr>
+            <tr><td colspan="7">No hay prendas registradas.</td></tr>
           <?php endif; ?>
 
           <?php foreach ($dresses as $dress): ?>
@@ -102,7 +102,7 @@ include __DIR__ . '/../includes/header.php';
                     <button class="btn small soft" type="submit"><?= $dress['status'] === 'sold' ? 'Disponible' : 'Vendido' ?></button>
                   </form>
 
-                  <form method="post" action="<?= BASE_URL ?>/admin/delete.php" class="inline-form" onsubmit="return confirm('¿Eliminar este vestido?');">
+                  <form method="post" action="<?= BASE_URL ?>/admin/delete.php" class="inline-form" onsubmit="return confirm('¿Eliminar esta prenda?');">
                     <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
                     <input type="hidden" name="id" value="<?= (int)$dress['id'] ?>">
                     <button class="btn small danger" type="submit">Eliminar</button>

@@ -26,7 +26,7 @@ if ($id > 0) {
     $found = $stmt->fetch();
 
     if (!$found) {
-        redirect('/admin/index.php?message=Vestido no encontrado');
+        redirect('/admin/index.php?message=Prenda no encontrado');
     }
 
     $dress = $found;
@@ -39,7 +39,7 @@ foreach (['XS','S','M','L','XL','XXL','Única'] as $defaultSize) {
     }
 }
 
-$page_title = ($id > 0 ? 'Editar vestido' : 'Agregar vestido') . ' | Brenan Boutique';
+$page_title = ($id > 0 ? 'Editar prenda' : 'Agregar prenda') . ' | Brenan Boutique';
 include __DIR__ . '/../includes/header.php';
 ?>
 
@@ -49,7 +49,7 @@ include __DIR__ . '/../includes/header.php';
       <span class="logo">BB</span>
       <span>
         <strong>Brenan Boutique</strong>
-        <small><?= $id > 0 ? 'Editar vestido' : 'Nuevo vestido' ?></small>
+        <small><?= $id > 0 ? 'Editar prenda' : 'Nuevo prenda' ?></small>
       </span>
     </a>
 
@@ -63,8 +63,8 @@ include __DIR__ . '/../includes/header.php';
 <main class="wrap admin-page">
   <section class="form-panel">
     <div class="panel-head">
-      <h1><?= $id > 0 ? 'Editar vestido' : 'Agregar vestido' ?></h1>
-      <p>Registra la fotografía, talla, precio y disponibilidad del vestido.</p>
+      <h1><?= $id > 0 ? 'Editar prenda' : 'Agregar prenda' ?></h1>
+      <p>Registra la fotografía, talla, precio y disponibilidad del prenda.</p>
     </div>
 
     <form class="dress-form" method="post" action="<?= BASE_URL ?>/admin/save.php" enctype="multipart/form-data">
@@ -100,7 +100,7 @@ include __DIR__ . '/../includes/header.php';
         <div class="fields">
           <label>
             <span>Nombre o código</span>
-            <input type="text" name="name" value="<?= e($dress['name']) ?>" required placeholder="Ej. Vestido satín rosa">
+            <input type="text" name="name" value="<?= e($dress['name']) ?>" required placeholder="Ej. Prenda satín rosa">
           </label>
 
           <div class="two">
@@ -144,7 +144,7 @@ include __DIR__ . '/../includes/header.php';
           </label>
 
           <div class="form-actions">
-            <button class="btn primary" type="submit">Guardar vestido</button>
+            <button class="btn primary" type="submit">Guardar prenda</button>
             <a class="btn" href="<?= BASE_URL ?>/admin/index.php">Cancelar</a>
           </div>
         </div>

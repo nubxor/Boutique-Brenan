@@ -11,6 +11,8 @@ if (is_logged_in()) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verify_csrf();
+
     $username = trim((string)($_POST['username'] ?? ''));
     $password = (string)($_POST['password'] ?? '');
 
@@ -18,26 +20,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('/admin/index.php');
     }
 
-    $error = 'Usuario o contraseña incorrectos.';
+    $remaining = login_lock_remaining();
+    if ($remaining > 0) {
+        http_response_code(429);
+        $minutes = max(1, (int)ceil($remaining / 60));
+        $error = "Demasiados intentos. Vuelve a intentarlo en aproximadamente {$minutes} minuto(s).";
+    } else {
+        $error = 'Usuario o contraseña incorrectos.';
+    }
 }
 
-$page_title = 'Iniciar sesión | Brenan Boutique';
+$page_title = 'Acceso administrativo | Brenan Boutique';
 include __DIR__ . '/../includes/header.php';
 ?>
 
 <main class="login-screen">
-  <form class="login-card" method="post">
+  <form class="login-card" method="post" autocomplete="on">
+    <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+
     <div class="logo large">BB</div>
     <h1>Panel Brenan Boutique</h1>
-    <p>Ingresa para administrar vestidos, fotografías, tallas, precios y ventas.</p>
+    <p>Acceso exclusivo para la administración del catálogo.</p>
 
     <?php if ($error): ?>
-      <div class="alert danger"><?= e($error) ?></div>
+      <div class="alert danger" role="alert"><?= e($error) ?></div>
     <?php endif; ?>
 
     <label>
       <span>Usuario</span>
-      <input type="text" name="username" required autocomplete="username">
+      <input type="text" name="username" required autocomplete="username" autocapitalize="none" spellcheck="false">
     </label>
 
     <label>
@@ -48,7 +59,7 @@ include __DIR__ . '/../includes/header.php';
     <button class="btn primary block" type="submit">Entrar</button>
     <a class="btn block" href="<?= BASE_URL ?>/index.php">Volver al catálogo</a>
 
-    <small>Acceso inicial: admin / admin123. Cámbialo en config.php.</small>
+    <small>La sesión se cierra automáticamente después de 30 minutos de inactividad.</small>
   </form>
 </main>
 

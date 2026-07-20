@@ -64,7 +64,7 @@ if ($id > 0) {
         delete_image_if_exists($currentImage);
     }
 
-    redirect('/admin/index.php?message=Vestido actualizado correctamente');
+    redirect('/admin/index.php?message=Prenda actualizado correctamente');
 }
 
 $stmt = $pdo->prepare("INSERT INTO dresses (name, size, price, status, sold_date, image, image_fit, created_at, updated_at) VALUES (:name, :size, :price, :status, :sold_date, :image, :image_fit, NOW(), NOW())");
@@ -78,4 +78,4 @@ $stmt->execute([
     ':image_fit' => $imageFit,
 ]);
 
-redirect('/admin/index.php?message=Vestido agregado correctamente');
+redirect('/admin/index.php?message=Prenda agregado correctamente');

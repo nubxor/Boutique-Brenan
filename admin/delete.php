@@ -25,4 +25,4 @@ if ($dress) {
     $delete->execute([':id' => $id]);
 }
 
-redirect('/admin/index.php?message=Vestido eliminado correctamente');
+redirect('/admin/index.php?message=Prenda eliminado correctamente');
