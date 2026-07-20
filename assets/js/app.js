@@ -14,17 +14,180 @@ document.addEventListener('DOMContentLoaded', function () {
 
   const fileInput = document.querySelector('input[type="file"][name="image"]');
   const preview = document.querySelector('.preview');
+  const uploadStatus = document.querySelector('[data-upload-status]');
 
   if (fileInput && preview) {
-    fileInput.addEventListener('change', function () {
+    const uploadForm = fileInput.closest('form');
+    const submitButton = uploadForm ? uploadForm.querySelector('button[type="submit"]') : null;
+    const MAX_CLIENT_EDGE = 2000;
+    const CLIENT_QUALITY = 0.84;
+    let previewUrl = '';
+    let processingToken = 0;
+
+    const formatMegabytes = function (bytes) {
+      return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    };
+
+    const setUploadState = function (message, busy) {
+      if (uploadStatus) {
+        uploadStatus.hidden = false;
+        uploadStatus.textContent = message;
+        uploadStatus.classList.toggle('is-processing', Boolean(busy));
+      }
+
+      if (submitButton) {
+        submitButton.disabled = Boolean(busy);
+        submitButton.textContent = busy ? 'Preparando imagen…' : 'Guardar vestido';
+      }
+    };
+
+    const loadLocalImage = function (file) {
+      return new Promise(function (resolve, reject) {
+        const url = URL.createObjectURL(file);
+        const image = new Image();
+
+        image.onload = function () {
+          resolve({ image: image, url: url });
+        };
+
+        image.onerror = function () {
+          URL.revokeObjectURL(url);
+          reject(new Error('No se pudo leer la imagen.'));
+        };
+
+        image.src = url;
+      });
+    };
+
+    const canvasToBlob = function (canvas, type, quality) {
+      return new Promise(function (resolve) {
+        canvas.toBlob(resolve, type, quality);
+      });
+    };
+
+    const optimizeBeforeUpload = async function (file) {
+      const canOptimize =
+        typeof DataTransfer === 'function' &&
+        typeof HTMLCanvasElement !== 'undefined' &&
+        typeof HTMLCanvasElement.prototype.toBlob === 'function' &&
+        file.type !== 'image/gif';
+
+      const loaded = await loadLocalImage(file);
+      const image = loaded.image;
+      const width = image.naturalWidth;
+      const height = image.naturalHeight;
+
+      if (!canOptimize || !width || !height) {
+        return { file: file, width: width, height: height, optimized: false, sourceUrl: loaded.url };
+      }
+
+      const ratio = Math.min(MAX_CLIENT_EDGE / width, MAX_CLIENT_EDGE / height, 1);
+      const targetWidth = Math.max(1, Math.round(width * ratio));
+      const targetHeight = Math.max(1, Math.round(height * ratio));
+      const shouldCompress = ratio < 1 || file.size > 900 * 1024;
+
+      if (!shouldCompress) {
+        return { file: file, width: width, height: height, optimized: false, sourceUrl: loaded.url };
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+
+      const context = canvas.getContext('2d', { alpha: false });
+      if (!context) {
+        return { file: file, width: width, height: height, optimized: false, sourceUrl: loaded.url };
+      }
+
+      context.fillStyle = '#ffffff';
+      context.fillRect(0, 0, targetWidth, targetHeight);
+      context.drawImage(image, 0, 0, targetWidth, targetHeight);
+
+      let blob = await canvasToBlob(canvas, 'image/webp', CLIENT_QUALITY);
+      let extension = 'webp';
+
+      if (!blob) {
+        blob = await canvasToBlob(canvas, 'image/jpeg', CLIENT_QUALITY);
+        extension = 'jpg';
+      }
+
+      if (!blob || (ratio === 1 && blob.size >= file.size)) {
+        return { file: file, width: width, height: height, optimized: false, sourceUrl: loaded.url };
+      }
+
+      URL.revokeObjectURL(loaded.url);
+      const originalStem = file.name.replace(/\.[^.]+$/, '') || 'fotografia';
+      const optimizedFile = new File(
+        [blob],
+        originalStem + '-optimizada.' + extension,
+        { type: blob.type, lastModified: Date.now() }
+      );
+
+      return {
+        file: optimizedFile,
+        width: targetWidth,
+        height: targetHeight,
+        optimized: true,
+        sourceUrl: URL.createObjectURL(optimizedFile),
+        originalSize: file.size
+      };
+    };
+
+    fileInput.addEventListener('change', async function () {
       const file = fileInput.files && fileInput.files[0];
       if (!file) return;
 
-      const reader = new FileReader();
-      reader.onload = function () {
-        preview.innerHTML = '<img src="' + reader.result + '" alt="Vista previa">';
-      };
-      reader.readAsDataURL(file);
+      const token = ++processingToken;
+      setUploadState('Preparando una versión ligera antes de subirla…', true);
+
+      try {
+        const result = await optimizeBeforeUpload(file);
+        if (token !== processingToken) {
+          URL.revokeObjectURL(result.sourceUrl);
+          return;
+        }
+
+        if (result.optimized) {
+          const transfer = new DataTransfer();
+          transfer.items.add(result.file);
+          fileInput.files = transfer.files;
+        }
+
+        if (previewUrl) {
+          URL.revokeObjectURL(previewUrl);
+        }
+        previewUrl = result.sourceUrl;
+
+        const image = document.createElement('img');
+        image.src = previewUrl;
+        image.alt = 'Vista previa de la fotografía seleccionada';
+        image.decoding = 'async';
+        preview.replaceChildren(image);
+
+        if (result.optimized) {
+          setUploadState(
+            'Lista para subir: ' + result.width + ' × ' + result.height + ' px. ' +
+            formatMegabytes(result.originalSize) + ' → ' + formatMegabytes(result.file.size) +
+            '. El servidor creará además las resoluciones del catálogo.',
+            false
+          );
+        } else {
+          setUploadState(
+            'Imagen seleccionada: ' + result.width + ' × ' + result.height + ' px, ' +
+            formatMegabytes(result.file.size) +
+            '. El servidor la optimizará al guardar.',
+            false
+          );
+        }
+      } catch (error) {
+        setUploadState('La vista previa no pudo optimizarse; el servidor intentará procesarla al guardar.', false);
+      }
+    });
+
+    window.addEventListener('beforeunload', function () {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
     });
   }
 
