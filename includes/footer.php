@@ -3,6 +3,6 @@
     <p>Brenan Boutique · Catálogo digital de vestidos</p>
   </div>
 </footer>
-<script src="<?= BASE_URL ?>/assets/js/app.js"></script>
+<script src="<?= BASE_URL ?>/assets/js/app.js?v=<?= (int)filemtime(__DIR__ . '/../assets/js/app.js') ?>"></script>
 </body>
 </html>

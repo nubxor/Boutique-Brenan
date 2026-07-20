@@ -10,6 +10,6 @@ if (!isset($page_title)) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?= e($page_title) ?></title>
   <meta name="description" content="Catálogo digital de vestidos Brenan Boutique.">
-  <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/styles.css">
+  <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/styles.css?v=<?= (int)filemtime(__DIR__ . '/../assets/css/styles.css') ?>">
 </head>
 <body>
