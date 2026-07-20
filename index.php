@@ -144,6 +144,7 @@ include __DIR__ . '/includes/header.php';
   </div>
 </section>
 
+<?php $catalogImageIndex = 0; ?>
 <main class="wrap catalog">
   <?php if (!$dresses): ?>
     <div class="empty">
@@ -171,14 +172,45 @@ include __DIR__ . '/includes/header.php';
 
             <div class="photo <?= $dress['image_fit'] === 'contain' ? 'contain' : '' ?>">
               <?php if (!empty($dress['image'])): ?>
+                <?php
+                  $catalogImageIndex++;
+                  $thumbnailUrl = image_public_url($dress['image'], 480);
+                  $fallbackSrcset = image_srcset($dress['image'], 'fallback');
+                  $webpSrcset = image_srcset($dress['image'], 'webp');
+                  $imageFallbacks = image_fallback_urls($dress['image']);
+                  $imageFallbackJson = json_encode($imageFallbacks, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: '[]';
+                  $isPriorityImage = $catalogImageIndex <= 2;
+                ?>
                 <button
                   class="photo-zoom"
                   type="button"
-                  data-lightbox-src="<?= UPLOAD_URL . '/' . e($dress['image']) ?>"
+                  data-lightbox-src="<?= e(image_public_url($dress['image'])) ?>"
+                  data-lightbox-fallbacks="<?= e($imageFallbackJson) ?>"
                   data-lightbox-alt="<?= e($dress['name']) ?>"
                   aria-label="Ampliar fotografía de <?= e($dress['name']) ?>"
                 >
-                  <img src="<?= UPLOAD_URL . '/' . e($dress['image']) ?>" alt="<?= e($dress['name']) ?>" loading="lazy" decoding="async">
+                  <picture>
+                    <?php if ($webpSrcset !== ''): ?>
+                      <source
+                        type="image/webp"
+                        srcset="<?= e($webpSrcset) ?>"
+                        sizes="(max-width: 460px) calc(100vw - 22px), (max-width: 760px) calc(50vw - 23px), (max-width: 1100px) calc(33vw - 28px), 280px"
+                      >
+                    <?php endif; ?>
+                    <img
+                      class="catalog-image"
+                      src="<?= e($thumbnailUrl) ?>"
+                      <?php if ($fallbackSrcset !== ''): ?>srcset="<?= e($fallbackSrcset) ?>"<?php endif; ?>
+                      sizes="(max-width: 460px) calc(100vw - 22px), (max-width: 760px) calc(50vw - 23px), (max-width: 1100px) calc(33vw - 28px), 280px"
+                      data-image-fallbacks="<?= e($imageFallbackJson) ?>"
+                      alt="<?= e($dress['name']) ?>"
+                      width="480"
+                      height="648"
+                      loading="<?= $isPriorityImage ? 'eager' : 'lazy' ?>"
+                      fetchpriority="<?= $isPriorityImage ? 'high' : 'low' ?>"
+                      decoding="async"
+                    >
+                  </picture>
                 </button>
               <?php else: ?>
                 <div class="no-photo">Sin foto</div>

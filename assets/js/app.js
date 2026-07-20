@@ -12,6 +12,85 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
+  const parseImageFallbacks = function (value) {
+    if (!value) return [];
+
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed)
+        ? parsed.filter(function (url) { return typeof url === 'string' && url !== ''; })
+        : [];
+    } catch (error) {
+      return [];
+    }
+  };
+
+  const absoluteUrl = function (url) {
+    try {
+      return new URL(url, window.location.href).href;
+    } catch (error) {
+      return url;
+    }
+  };
+
+  const installImageFallback = function (image) {
+    const candidates = parseImageFallbacks(image.dataset.imageFallbacks);
+    const attempted = new Set();
+    let finished = false;
+
+    const removeResponsiveSources = function () {
+      const picture = image.closest('picture');
+      if (picture) {
+        picture.querySelectorAll('source').forEach(function (source) {
+          source.remove();
+        });
+      }
+
+      image.removeAttribute('srcset');
+      image.removeAttribute('sizes');
+    };
+
+    const showUnavailableState = function () {
+      finished = true;
+      image.classList.add('image-load-failed');
+      const holder = image.closest('.photo-zoom, .preview, td');
+      if (holder) holder.classList.add('image-unavailable');
+    };
+
+    const tryNext = function () {
+      if (finished) return;
+
+      removeResponsiveSources();
+      attempted.add(absoluteUrl(image.currentSrc || image.src || ''));
+
+      while (candidates.length) {
+        const next = candidates.shift();
+        const normalized = absoluteUrl(next);
+        if (!normalized || attempted.has(normalized)) continue;
+
+        attempted.add(normalized);
+        image.src = next;
+        return;
+      }
+
+      showUnavailableState();
+    };
+
+    image.addEventListener('load', function () {
+      image.classList.remove('image-load-failed');
+      const holder = image.closest('.photo-zoom, .preview, td');
+      if (holder) holder.classList.remove('image-unavailable');
+    });
+
+    image.addEventListener('error', tryNext);
+
+    if (image.complete && image.naturalWidth === 0) {
+      window.setTimeout(tryNext, 0);
+    }
+  };
+
+  document.querySelectorAll('img[data-image-fallbacks]').forEach(installImageFallback);
+
   const fileInput = document.querySelector('input[type="file"][name="image"]');
   const preview = document.querySelector('.preview');
   const uploadStatus = document.querySelector('[data-upload-status]');
@@ -103,13 +182,8 @@ document.addEventListener('DOMContentLoaded', function () {
       context.fillRect(0, 0, targetWidth, targetHeight);
       context.drawImage(image, 0, 0, targetWidth, targetHeight);
 
-      let blob = await canvasToBlob(canvas, 'image/webp', CLIENT_QUALITY);
-      let extension = 'webp';
-
-      if (!blob) {
-        blob = await canvasToBlob(canvas, 'image/jpeg', CLIENT_QUALITY);
-        extension = 'jpg';
-      }
+      const blob = await canvasToBlob(canvas, 'image/jpeg', CLIENT_QUALITY);
+      const extension = 'jpg';
 
       if (!blob || (ratio === 1 && blob.size >= file.size)) {
         return { file: file, width: width, height: height, optimized: false, sourceUrl: loaded.url };
@@ -221,6 +295,8 @@ document.addEventListener('DOMContentLoaded', function () {
     let baseHeight = 1;
     let lastTrigger = null;
     let resizeTimer = null;
+    let lightboxFallbacks = [];
+    let lightboxFallbackIndex = 0;
 
     const clamp = function (value, min, max) {
       return Math.min(Math.max(value, min), max);
@@ -315,7 +391,17 @@ document.addEventListener('DOMContentLoaded', function () {
       document.body.classList.add('lightbox-open');
       updateControls();
 
-      lightboxImage.src = button.dataset.lightboxSrc || '';
+      const primaryUrl = button.dataset.lightboxSrc || '';
+      const extraFallbacks = parseImageFallbacks(button.dataset.lightboxFallbacks);
+      lightboxFallbacks = Array.from(new Set([primaryUrl].concat(extraFallbacks).filter(Boolean)));
+      lightboxFallbackIndex = 0;
+
+      if (lightboxFallbacks.length) {
+        lightboxImage.src = lightboxFallbacks[0];
+      } else {
+        setLoading(true, 'No hay una fotografía disponible para esta prenda.');
+      }
+
       if (lightboxImage.complete && lightboxImage.naturalWidth) {
         requestAnimationFrame(fitImageToScreen);
       }
@@ -329,6 +415,8 @@ document.addEventListener('DOMContentLoaded', function () {
       lightbox.setAttribute('aria-hidden', 'true');
       document.body.classList.remove('lightbox-open');
       lightboxImage.removeAttribute('src');
+      lightboxFallbacks = [];
+      lightboxFallbackIndex = 0;
       lightboxStage.scrollLeft = 0;
       lightboxStage.scrollTop = 0;
       setLoading(false);
@@ -340,7 +428,15 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     lightboxImage.addEventListener('error', function () {
-      setLoading(true, 'No fue posible cargar la fotografía.');
+      lightboxFallbackIndex += 1;
+
+      if (lightboxFallbackIndex < lightboxFallbacks.length) {
+        setLoading(true, 'Cargando una versión compatible…');
+        lightboxImage.src = lightboxFallbacks[lightboxFallbackIndex];
+        return;
+      }
+
+      setLoading(true, 'No fue posible cargar la fotografía. Repárala desde el panel administrativo.');
     });
 
     zoomButtons.forEach(function (button) {

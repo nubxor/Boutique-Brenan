@@ -85,6 +85,25 @@ function image_type_optimizer_supported(int $type): bool
     };
 }
 
+function upload_image_path(string $filename): string
+{
+    return rtrim(UPLOAD_DIR, '/\\') . DIRECTORY_SEPARATOR . basename($filename);
+}
+
+function image_file_is_usable(string $path): bool
+{
+    if (!is_file($path) || !is_readable($path)) {
+        return false;
+    }
+
+    $size = @filesize($path);
+    if ($size === false || $size < 16) {
+        return false;
+    }
+
+    return @getimagesize($path) !== false;
+}
+
 /**
  * Crea un recurso GD desde un archivo validado.
  *
@@ -183,15 +202,24 @@ function save_resized_image($source, string $destination, int $maxWidth, int $ma
     }
 
     $saved = $format === 'webp'
-        ? imagewebp($canvas, $destination, $quality)
-        : imagejpeg($canvas, $destination, $quality);
+        ? (function_exists('imagewebp') && @imagewebp($canvas, $destination, $quality))
+        : @imagejpeg($canvas, $destination, $quality);
 
     imagedestroy($canvas);
-    return $saved;
+
+    if (!$saved || !image_file_is_usable($destination)) {
+        if (is_file($destination)) {
+            @unlink($destination);
+        }
+        return false;
+    }
+
+    return true;
 }
 
 /**
- * Genera una imagen principal y dos resoluciones ligeras para catálogo.
+ * Genera una imagen JPG principal y versiones JPG/WebP para el catálogo.
+ * La versión JPG siempre funciona como respaldo compatible.
  */
 function create_optimized_image_set(string $sourcePath, int $sourceType, string $stem): string
 {
@@ -205,34 +233,34 @@ function create_optimized_image_set(string $sourcePath, int $sourceType, string 
     }
 
     $source = apply_exif_orientation($source, $sourcePath, $sourceType);
-    $format = function_exists('imagewebp') ? 'webp' : 'jpg';
-    $extension = $format;
 
-    $mainFilename = $stem . '.' . $extension;
-    $mediumFilename = $stem . '-900.' . $extension;
-    $smallFilename = $stem . '-480.' . $extension;
-
-    $mainPath = rtrim(UPLOAD_DIR, '/\\') . DIRECTORY_SEPARATOR . $mainFilename;
-    $mediumPath = rtrim(UPLOAD_DIR, '/\\') . DIRECTORY_SEPARATOR . $mediumFilename;
-    $smallPath = rtrim(UPLOAD_DIR, '/\\') . DIRECTORY_SEPARATOR . $smallFilename;
-
+    $mainFilename = $stem . '.jpg';
+    $mainPath = upload_image_path($mainFilename);
     $createdPaths = [];
 
     try {
-        if (!save_resized_image($source, $mainPath, 1600, 2000, 82, $format)) {
-            throw new RuntimeException('No fue posible crear la imagen optimizada.');
+        if (!save_resized_image($source, $mainPath, 1600, 2000, 84, 'jpg')) {
+            throw new RuntimeException('No fue posible crear la imagen principal compatible.');
         }
         $createdPaths[] = $mainPath;
 
-        if (!save_resized_image($source, $mediumPath, 900, 1200, 78, $format)) {
-            throw new RuntimeException('No fue posible crear la resolución mediana.');
-        }
-        $createdPaths[] = $mediumPath;
+        foreach ([
+            ['suffix' => '900', 'width' => 900, 'height' => 1200, 'quality' => 80],
+            ['suffix' => '480', 'width' => 480, 'height' => 680, 'quality' => 77],
+        ] as $variant) {
+            $jpgPath = upload_image_path($stem . '-' . $variant['suffix'] . '.jpg');
+            if (!save_resized_image($source, $jpgPath, $variant['width'], $variant['height'], $variant['quality'], 'jpg')) {
+                throw new RuntimeException('No fue posible crear la resolución JPG de ' . $variant['suffix'] . ' px.');
+            }
+            $createdPaths[] = $jpgPath;
 
-        if (!save_resized_image($source, $smallPath, 480, 680, 75, $format)) {
-            throw new RuntimeException('No fue posible crear la miniatura ligera.');
+            if (function_exists('imagewebp')) {
+                $webpPath = upload_image_path($stem . '-' . $variant['suffix'] . '.webp');
+                if (save_resized_image($source, $webpPath, $variant['width'], $variant['height'], max(70, $variant['quality'] - 3), 'webp')) {
+                    $createdPaths[] = $webpPath;
+                }
+            }
         }
-        $createdPaths[] = $smallPath;
     } catch (Throwable $e) {
         foreach ($createdPaths as $createdPath) {
             if (is_file($createdPath)) {
@@ -248,22 +276,55 @@ function create_optimized_image_set(string $sourcePath, int $sourceType, string 
 }
 
 /**
- * Genera las resoluciones 480 y 900 para una imagen que ya existe.
- * Conserva intacto el archivo original y no requiere cambios en la base de datos.
+ * Encuentra la mejor fuente existente, incluso si cambió la extensión
+ * o si solo quedó una variante de 900/480 px.
+ */
+function find_existing_image_source(string $filename): string
+{
+    $filename = basename($filename);
+    if ($filename === '') {
+        return '';
+    }
+
+    $stem = pathinfo($filename, PATHINFO_FILENAME);
+    $candidates = [$filename];
+
+    foreach (['jpg', 'jpeg', 'png', 'webp', 'gif'] as $extension) {
+        $candidates[] = $stem . '.' . $extension;
+    }
+
+    foreach ([900, 480] as $width) {
+        foreach (['jpg', 'jpeg', 'png', 'webp', 'gif'] as $extension) {
+            $candidates[] = $stem . '-' . $width . '.' . $extension;
+        }
+    }
+
+    foreach (array_unique($candidates) as $candidate) {
+        if (image_file_is_usable(upload_image_path($candidate))) {
+            return $candidate;
+        }
+    }
+
+    return '';
+}
+
+/**
+ * Genera respaldos JPG y versiones WebP para una fotografía ya existente.
  */
 function generate_existing_image_variants(string $filename, bool $force = false): array
 {
     $filename = basename($filename);
-    $sourcePath = rtrim(UPLOAD_DIR, '/\\') . DIRECTORY_SEPARATOR . $filename;
+    $sourceFilename = find_existing_image_source($filename);
 
-    if (!is_file($sourcePath)) {
-        return ['created' => 0, 'skipped' => 0, 'error' => 'Archivo no encontrado'];
+    if ($sourceFilename === '') {
+        return ['created' => 0, 'skipped' => 0, 'error' => 'No se encontró un archivo de imagen utilizable'];
     }
 
     if (!image_optimizer_available()) {
         return ['created' => 0, 'skipped' => 0, 'error' => 'La extensión GD no está habilitada'];
     }
 
+    $sourcePath = upload_image_path($sourceFilename);
     $info = @getimagesize($sourcePath);
     if ($info === false) {
         return ['created' => 0, 'skipped' => 0, 'error' => 'Imagen no válida'];
@@ -280,40 +341,109 @@ function generate_existing_image_variants(string $filename, bool $force = false)
     }
 
     $source = apply_exif_orientation($source, $sourcePath, $sourceType);
-    $format = function_exists('imagewebp') ? 'webp' : 'jpg';
     $stem = pathinfo($filename, PATHINFO_FILENAME);
-
-    $variants = [
-        ['suffix' => '900', 'width' => 900, 'height' => 1200, 'quality' => 78],
-        ['suffix' => '480', 'width' => 480, 'height' => 680, 'quality' => 75],
-    ];
-
     $created = 0;
     $skipped = 0;
 
-    foreach ($variants as $variant) {
-        $variantFilename = $stem . '-' . $variant['suffix'] . '.' . $format;
-        $variantPath = rtrim(UPLOAD_DIR, '/\\') . DIRECTORY_SEPARATOR . $variantFilename;
+    foreach ([
+        ['suffix' => '900', 'width' => 900, 'height' => 1200, 'quality' => 80],
+        ['suffix' => '480', 'width' => 480, 'height' => 680, 'quality' => 77],
+    ] as $variant) {
+        foreach (['jpg', 'webp'] as $format) {
+            if ($format === 'webp' && !function_exists('imagewebp')) {
+                continue;
+            }
 
-        if (!$force && is_file($variantPath)) {
-            $skipped++;
-            continue;
-        }
+            $variantFilename = $stem . '-' . $variant['suffix'] . '.' . $format;
+            $variantPath = upload_image_path($variantFilename);
 
-        if (save_resized_image(
-            $source,
-            $variantPath,
-            $variant['width'],
-            $variant['height'],
-            $variant['quality'],
-            $format
-        )) {
-            $created++;
+            if (!$force && image_file_is_usable($variantPath)) {
+                $skipped++;
+                continue;
+            }
+
+            $quality = $format === 'webp' ? max(70, $variant['quality'] - 3) : $variant['quality'];
+            if (save_resized_image($source, $variantPath, $variant['width'], $variant['height'], $quality, $format)) {
+                $created++;
+            }
         }
     }
 
     imagedestroy($source);
     return ['created' => $created, 'skipped' => $skipped, 'error' => null];
+}
+
+/**
+ * Repara un registro: crea una imagen principal JPG si el registro apunta
+ * a WebP/PNG o si el archivo principal desapareció, y actualiza la base de datos.
+ */
+function repair_image_record(PDO $pdo, int $id, string $filename, bool $force = false): array
+{
+    $filename = basename($filename);
+    $sourceFilename = find_existing_image_source($filename);
+
+    if ($sourceFilename === '') {
+        return ['created' => 0, 'skipped' => 0, 'updated' => false, 'error' => 'No se encontró la fotografía; es necesario volver a subirla'];
+    }
+
+    if (!image_optimizer_available()) {
+        return ['created' => 0, 'skipped' => 0, 'updated' => false, 'error' => 'La extensión GD no está habilitada'];
+    }
+
+    $sourcePath = upload_image_path($sourceFilename);
+    $info = @getimagesize($sourcePath);
+    if ($info === false) {
+        return ['created' => 0, 'skipped' => 0, 'updated' => false, 'error' => 'La fotografía no es válida'];
+    }
+
+    $sourceType = (int)($info[2] ?? 0);
+    if (!image_type_optimizer_supported($sourceType)) {
+        return ['created' => 0, 'skipped' => 0, 'updated' => false, 'error' => 'El servidor no puede leer el formato de esta fotografía'];
+    }
+
+    $stem = pathinfo($filename, PATHINFO_FILENAME);
+    $currentExtension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+    $mainFilename = in_array($currentExtension, ['jpg', 'jpeg'], true)
+        && image_file_is_usable(upload_image_path($filename))
+        ? $filename
+        : $stem . '.jpg';
+
+    $created = 0;
+    $skipped = 0;
+
+    if ($force || !image_file_is_usable(upload_image_path($mainFilename))) {
+        $source = create_image_resource($sourcePath, $sourceType);
+        if ($source === false) {
+            return ['created' => 0, 'skipped' => 0, 'updated' => false, 'error' => 'No fue posible abrir la fotografía para repararla'];
+        }
+
+        $source = apply_exif_orientation($source, $sourcePath, $sourceType);
+        $saved = save_resized_image($source, upload_image_path($mainFilename), 1600, 2000, 84, 'jpg');
+        imagedestroy($source);
+
+        if (!$saved) {
+            return ['created' => 0, 'skipped' => 0, 'updated' => false, 'error' => 'No fue posible crear el respaldo JPG'];
+        }
+        $created++;
+    } else {
+        $skipped++;
+    }
+
+    $variantResult = generate_existing_image_variants($mainFilename, $force);
+    $created += (int)$variantResult['created'];
+    $skipped += (int)$variantResult['skipped'];
+
+    if (!empty($variantResult['error'])) {
+        return ['created' => $created, 'skipped' => $skipped, 'updated' => false, 'error' => $variantResult['error']];
+    }
+
+    $updated = $mainFilename !== $filename;
+    if ($updated) {
+        $stmt = $pdo->prepare('UPDATE dresses SET image = :image, updated_at = NOW() WHERE id = :id');
+        $stmt->execute([':image' => $mainFilename, ':id' => $id]);
+    }
+
+    return ['created' => $created, 'skipped' => $skipped, 'updated' => $updated, 'error' => null];
 }
 
 function upload_image(array $file): ?string
@@ -358,9 +488,9 @@ function upload_image(array $file): ?string
         return create_optimized_image_set($tmp, $type, $stem);
     }
 
-    // Respaldo para servidores sin GD: guarda el archivo original.
+    // Respaldo para servidores sin GD: conserva el archivo original.
     $filename = $stem . '.' . $allowed[$type];
-    $destination = rtrim(UPLOAD_DIR, '/\\') . DIRECTORY_SEPARATOR . $filename;
+    $destination = upload_image_path($filename);
 
     if (!move_uploaded_file($tmp, $destination)) {
         throw new RuntimeException('No fue posible guardar la imagen en el servidor.');
@@ -369,10 +499,7 @@ function upload_image(array $file): ?string
     return $filename;
 }
 
-/**
- * Devuelve el nombre de la variante disponible o el archivo original.
- */
-function image_variant_filename(?string $filename, int $width): string
+function image_variant_filename(?string $filename, int $width, array $extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp']): string
 {
     $filename = basename((string)$filename);
     if ($filename === '') {
@@ -380,42 +507,130 @@ function image_variant_filename(?string $filename, int $width): string
     }
 
     $stem = pathinfo($filename, PATHINFO_FILENAME);
-    foreach (['webp', 'jpg', 'jpeg', 'png'] as $extension) {
+    foreach ($extensions as $extension) {
         $candidate = $stem . '-' . $width . '.' . $extension;
-        $candidatePath = rtrim(UPLOAD_DIR, '/\\') . DIRECTORY_SEPARATOR . $candidate;
-        if (is_file($candidatePath)) {
+        if (image_file_is_usable(upload_image_path($candidate))) {
             return $candidate;
         }
     }
 
-    return $filename;
+    return '';
 }
 
-function image_public_url(?string $filename, ?int $width = null): string
-{
-    $resolved = $width === null
-        ? basename((string)$filename)
-        : image_variant_filename($filename, $width);
-
-    return rtrim(UPLOAD_URL, '/') . '/' . rawurlencode($resolved);
-}
-
-function image_srcset(?string $filename): string
+function image_main_filename(?string $filename, array $extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp']): string
 {
     $filename = basename((string)$filename);
     if ($filename === '') {
         return '';
     }
 
+    $stem = pathinfo($filename, PATHINFO_FILENAME);
+    foreach ($extensions as $extension) {
+        $candidate = $stem . '.' . $extension;
+        if (image_file_is_usable(upload_image_path($candidate))) {
+            return $candidate;
+        }
+    }
+
+    if (image_file_is_usable(upload_image_path($filename))) {
+        return $filename;
+    }
+
+    return find_existing_image_source($filename);
+}
+
+function image_url_from_filename(string $filename): string
+{
+    return rtrim(UPLOAD_URL, '/') . '/' . rawurlencode(basename($filename));
+}
+
+function image_public_url(?string $filename, ?int $width = null): string
+{
+    $resolved = '';
+
+    if ($width !== null) {
+        $resolved = image_variant_filename($filename, $width, ['jpg', 'jpeg', 'png', 'gif']);
+    }
+
+    if ($resolved === '') {
+        $resolved = image_main_filename($filename, ['jpg', 'jpeg', 'png', 'gif']);
+    }
+
+    if ($resolved === '' && $width !== null) {
+        $resolved = image_variant_filename($filename, $width, ['webp']);
+    }
+
+    if ($resolved === '') {
+        $resolved = image_main_filename($filename, ['webp']);
+    }
+
+    return $resolved === '' ? '' : image_url_from_filename($resolved);
+}
+
+/**
+ * Devuelve srcset de respaldo compatible o srcset WebP para <picture>.
+ */
+function image_srcset(?string $filename, string $format = 'fallback'): string
+{
+    $filename = basename((string)$filename);
+    if ($filename === '') {
+        return '';
+    }
+
+    $extensions = $format === 'webp'
+        ? ['webp']
+        : ['jpg', 'jpeg', 'png', 'gif'];
+
     $entries = [];
     foreach ([480, 900] as $width) {
-        $variant = image_variant_filename($filename, $width);
-        if ($variant !== $filename) {
-            $entries[] = image_public_url($variant) . ' ' . $width . 'w';
+        $variant = image_variant_filename($filename, $width, $extensions);
+        if ($variant !== '') {
+            $entries[] = image_url_from_filename($variant) . ' ' . $width . 'w';
         }
     }
 
     return implode(', ', $entries);
+}
+
+/**
+ * Lista ordenada para recuperar automáticamente una imagen que falle.
+ */
+function image_fallback_urls(?string $filename): array
+{
+    $filename = basename((string)$filename);
+    if ($filename === '') {
+        return [];
+    }
+
+    $urls = [];
+
+    // Primero intenta respaldos ampliamente compatibles.
+    foreach ([480, 900] as $width) {
+        $candidate = image_variant_filename($filename, $width, ['jpg', 'jpeg', 'png', 'gif']);
+        if ($candidate !== '') {
+            $urls[] = image_url_from_filename($candidate);
+        }
+    }
+
+    $mainFallback = image_main_filename($filename, ['jpg', 'jpeg', 'png', 'gif']);
+    if ($mainFallback !== '') {
+        $urls[] = image_url_from_filename($mainFallback);
+    }
+
+    // WebP queda al final como alternativa adicional.
+    foreach ([480, 900] as $width) {
+        $candidate = image_variant_filename($filename, $width, ['webp']);
+        if ($candidate !== '') {
+            $urls[] = image_url_from_filename($candidate);
+        }
+    }
+
+    $mainWebp = image_main_filename($filename, ['webp']);
+    if ($mainWebp !== '') {
+        $urls[] = image_url_from_filename($mainWebp);
+    }
+
+    return array_values(array_unique($urls));
 }
 
 function delete_image_if_exists(?string $filename): void
@@ -426,11 +641,15 @@ function delete_image_if_exists(?string $filename): void
     }
 
     $stem = pathinfo($filename, PATHINFO_FILENAME);
-    $paths = [rtrim(UPLOAD_DIR, '/\\') . DIRECTORY_SEPARATOR . $filename];
+    $paths = [];
+
+    foreach (['jpg', 'jpeg', 'png', 'webp', 'gif'] as $extension) {
+        $paths[] = upload_image_path($stem . '.' . $extension);
+    }
 
     foreach ([480, 900] as $width) {
-        foreach (['webp', 'jpg', 'jpeg', 'png'] as $extension) {
-            $paths[] = rtrim(UPLOAD_DIR, '/\\') . DIRECTORY_SEPARATOR . $stem . '-' . $width . '.' . $extension;
+        foreach (['jpg', 'jpeg', 'png', 'webp', 'gif'] as $extension) {
+            $paths[] = upload_image_path($stem . '-' . $width . '.' . $extension);
         }
     }
 

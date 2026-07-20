@@ -15,27 +15,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     @set_time_limit(180);
 
     $force = !empty($_POST['force']);
-    $images = $pdo->query("SELECT DISTINCT image FROM dresses WHERE image IS NOT NULL AND image <> ''")
-        ->fetchAll(PDO::FETCH_COLUMN);
+    $records = $pdo->query("SELECT id, name, image FROM dresses WHERE image IS NOT NULL AND image <> '' ORDER BY id ASC")
+        ->fetchAll(PDO::FETCH_ASSOC);
 
     $created = 0;
     $skipped = 0;
+    $updated = 0;
     $errors = [];
 
-    foreach ($images as $image) {
-        $result = generate_existing_image_variants((string)$image, $force);
+    foreach ($records as $record) {
+        $result = repair_image_record(
+            $pdo,
+            (int)$record['id'],
+            (string)$record['image'],
+            $force
+        );
+
         $created += (int)$result['created'];
         $skipped += (int)$result['skipped'];
+        $updated += !empty($result['updated']) ? 1 : 0;
 
         if (!empty($result['error'])) {
-            $errors[] = basename((string)$image) . ': ' . $result['error'];
+            $errors[] = (string)$record['name'] . ' (' . basename((string)$record['image']) . '): ' . $result['error'];
         }
     }
 
     $report = [
-        'images' => count($images),
+        'images' => count($records),
         'created' => $created,
         'skipped' => $skipped,
+        'updated' => $updated,
         'errors' => $errors,
     ];
 }
@@ -50,7 +59,7 @@ include __DIR__ . '/../includes/header.php';
       <span class="logo">BB</span>
       <span>
         <strong>Brenan Boutique</strong>
-        <small>Optimización para smartphone</small>
+        <small>Reparación y optimización de fotografías</small>
       </span>
     </a>
 
@@ -64,8 +73,8 @@ include __DIR__ . '/../includes/header.php';
 <main class="wrap admin-page">
   <section class="form-panel optimize-panel">
     <div class="panel-head">
-      <h1>Optimizar fotografías existentes</h1>
-      <p>Genera versiones ligeras de 480 y 900 píxeles para que el catálogo cargue más rápido en celular. Las fotografías originales se conservan para la vista ampliada.</p>
+      <h1>Reparar y optimizar fotografías existentes</h1>
+      <p>Comprueba cada fotografía, corrige referencias con extensión incompatible y genera respaldos JPG junto con versiones ligeras de 480 y 900 píxeles.</p>
     </div>
 
     <?php if (!image_optimizer_available()): ?>
@@ -77,11 +86,11 @@ include __DIR__ . '/../includes/header.php';
     <?php if ($report): ?>
       <?php if (!$report['errors']): ?>
         <div class="alert success">
-          Optimización terminada: <?= (int)$report['images'] ?> fotografías revisadas, <?= (int)$report['created'] ?> archivos ligeros creados y <?= (int)$report['skipped'] ?> omitidos porque ya existían.
+          Proceso terminado: <?= (int)$report['images'] ?> fotografías revisadas, <?= (int)$report['created'] ?> archivos creados, <?= (int)$report['updated'] ?> referencias reparadas y <?= (int)$report['skipped'] ?> archivos conservados porque ya eran válidos.
         </div>
       <?php else: ?>
         <div class="alert danger">
-          Se terminó el proceso con <?= count($report['errors']) ?> archivo(s) que no pudieron procesarse.
+          Se terminó el proceso con <?= count($report['errors']) ?> fotografía(s) que no pudieron recuperarse automáticamente. Las demás sí fueron revisadas y reparadas.
         </div>
         <ul class="optimization-errors">
           <?php foreach ($report['errors'] as $error): ?>
@@ -101,8 +110,8 @@ include __DIR__ . '/../includes/header.php';
         <span>Resolución nítida para pantallas de alta densidad.</span>
       </div>
       <div>
-        <strong>Original</strong>
-        <span>Se utiliza únicamente al abrir la prenda a detalle.</span>
+        <strong>JPG compatible</strong>
+        <span>Respaldo principal para evitar cuadros vacíos si WebP falla.</span>
       </div>
     </div>
 
@@ -111,11 +120,11 @@ include __DIR__ . '/../includes/header.php';
 
       <label class="optimization-check">
         <input type="checkbox" name="force" value="1">
-        <span>Volver a generar las versiones ligeras que ya existen.</span>
+        <span>Volver a crear también los respaldos y versiones que ya existen.</span>
       </label>
 
       <div class="form-actions">
-        <button class="btn primary" type="submit" <?= image_optimizer_available() ? '' : 'disabled' ?>>Optimizar ahora</button>
+        <button class="btn primary" type="submit" <?= image_optimizer_available() ? '' : 'disabled' ?>>Reparar y optimizar ahora</button>
         <a class="btn" href="<?= BASE_URL ?>/admin/index.php">Cancelar</a>
       </div>
     </form>

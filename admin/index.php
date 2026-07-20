@@ -42,7 +42,7 @@ include __DIR__ . '/../includes/header.php';
       <p>Agrega, edita, elimina y marca vestidos como vendidos.</p>
     </div>
     <div class="top-actions">
-      <a class="btn" href="<?= BASE_URL ?>/admin/optimize-images.php">Optimizar imágenes</a>
+      <a class="btn" href="<?= BASE_URL ?>/admin/optimize-images.php">Reparar y optimizar imágenes</a>
       <a class="btn primary" href="<?= BASE_URL ?>/admin/dress-form.php">+ Agregar vestido</a>
     </div>
   </div>
@@ -74,7 +74,15 @@ include __DIR__ . '/../includes/header.php';
             <tr>
               <td>
                 <?php if (!empty($dress['image'])): ?>
-                  <img class="thumb" src="<?= e(image_public_url($dress['image'], 480)) ?>" alt="<?= e($dress['name']) ?>" loading="lazy" decoding="async">
+                  <?php $thumbFallbacks = json_encode(image_fallback_urls($dress['image']), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: '[]'; ?>
+                  <img
+                    class="thumb"
+                    src="<?= e(image_public_url($dress['image'], 480)) ?>"
+                    data-image-fallbacks="<?= e($thumbFallbacks) ?>"
+                    alt="<?= e($dress['name']) ?>"
+                    loading="lazy"
+                    decoding="async"
+                  >
                 <?php else: ?>
                   <span class="thumb no-thumb">—</span>
                 <?php endif; ?>

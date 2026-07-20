@@ -81,13 +81,19 @@ include __DIR__ . '/../includes/header.php';
 
           <div class="preview">
             <?php if (!empty($dress['image'])): ?>
-              <img src="<?= e(image_public_url($dress['image'], 480)) ?>" alt="<?= e($dress['name']) ?>" decoding="async">
+              <?php $previewFallbacks = json_encode(image_fallback_urls($dress['image']), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: '[]'; ?>
+              <img
+                src="<?= e(image_public_url($dress['image'], 480)) ?>"
+                data-image-fallbacks="<?= e($previewFallbacks) ?>"
+                alt="<?= e($dress['name']) ?>"
+                decoding="async"
+              >
             <?php else: ?>
               <span>Vista previa</span>
             <?php endif; ?>
           </div>
 
-          <small>JPG, PNG, WEBP o GIF, máximo 5 MB. Al guardar, el sistema crea automáticamente versiones ligeras para celular y conserva una imagen de alta calidad para el detalle.</small>
+          <small>JPG, PNG, WEBP o GIF, máximo 5 MB. Al guardar, el sistema crea una imagen principal JPG compatible y versiones ligeras JPG/WebP para celular.</small>
           <div class="upload-optimization-status" data-upload-status hidden aria-live="polite"></div>
         </div>
 
