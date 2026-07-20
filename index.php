@@ -6,10 +6,13 @@ require_once __DIR__ . '/includes/db.php';
 require_once __DIR__ . '/includes/functions.php';
 
 $pdo = db();
+ensure_categories_schema($pdo);
 $sizes = get_sizes($pdo);
+$categories = get_categories($pdo, false);
 
 $filters = [
     'q' => trim((string)($_GET['q'] ?? '')),
+    'category' => (string)($_GET['category'] ?? 'all'),
     'size' => (string)($_GET['size'] ?? 'all'),
     'status' => (string)($_GET['status'] ?? 'available'),
     'min_price' => trim((string)($_GET['min_price'] ?? '')),
@@ -27,13 +30,14 @@ $dresses = build_public_query($pdo, $filters);
 
 $availableCount = (int)$pdo->query("SELECT COUNT(*) FROM dresses WHERE status='available'")->fetchColumn();
 $soldCount = (int)$pdo->query("SELECT COUNT(*) FROM dresses WHERE status='sold'")->fetchColumn();
-$sizeCount = (int)$pdo->query("SELECT COUNT(DISTINCT size) FROM dresses")->fetchColumn();
+$categoryCount = (int)$pdo->query("SELECT COUNT(DISTINCT category) FROM dresses WHERE category <> ''")->fetchColumn();
 
 $groups = [];
 foreach ($dresses as $dress) {
-    $group = ($dress['status'] === 'sold' && $filters['status'] !== 'available')
-        ? 'Vendidos · Talla ' . $dress['size']
-        : 'Talla ' . $dress['size'];
+    $category = normalize_category((string)($dress['category'] ?? 'Otros'));
+    $group = ($dress['status'] === 'sold' && $filters['status'] === 'all')
+        ? $category . ' · Vendidos'
+        : $category;
     $groups[$group][] = $dress;
 }
 
@@ -64,7 +68,7 @@ include __DIR__ . '/includes/header.php';
       <div>
         <span class="eyebrow">✦ Colección disponible</span>
         <h1>Prendas seleccionadas para hacer especial cada momento.</h1>
-        <p>Consulta prendas por talla, precio y disponibilidad. Las fotografías se ajustan al catálogo sin deformarse y cada tarjeta muestra claramente la talla y el precio.</p>
+        <p>Consulta prendas por categoría, talla, precio y disponibilidad. Las fotografías se ajustan al catálogo sin deformarse y cada tarjeta muestra claramente la talla y el precio.</p>
 
         <div class="hero-buttons">
           <a class="btn primary" href="#catalogo">Explorar prendas</a>
@@ -77,7 +81,7 @@ include __DIR__ . '/includes/header.php';
       <div class="stats">
         <div class="stat"><strong><?= $availableCount ?></strong><span>Disponibles</span></div>
         <div class="stat"><strong><?= $soldCount ?></strong><span>Vendidos</span></div>
-        <div class="stat"><strong><?= $sizeCount ?></strong><span>Tallas</span></div>
+        <div class="stat"><strong><?= $categoryCount ?></strong><span>Categorías</span></div>
       </div>
     </section>
   </div>
@@ -90,7 +94,19 @@ include __DIR__ . '/includes/header.php';
     <form class="filters" method="get" action="<?= BASE_URL ?>/index.php" data-filters>
       <label>
         <span>Buscar</span>
-        <input type="search" name="q" value="<?= e($filters['q']) ?>" placeholder="Nombre o talla...">
+        <input type="search" name="q" value="<?= e($filters['q']) ?>" placeholder="Nombre, categoría o talla...">
+      </label>
+
+
+
+      <label>
+        <span>Categoría</span>
+        <select name="category">
+          <option value="all">Todas</option>
+          <?php foreach ($categories as $category): ?>
+            <option value="<?= e($category) ?>" <?= selected($filters['category'], $category) ?>><?= e($category) ?></option>
+          <?php endforeach; ?>
+        </select>
       </label>
 
       <label>
@@ -134,6 +150,7 @@ include __DIR__ . '/includes/header.php';
           <option value="price-asc" <?= selected($filters['sort'], 'price-asc') ?>>Menor precio</option>
           <option value="price-desc" <?= selected($filters['sort'], 'price-desc') ?>>Mayor precio</option>
           <option value="size" <?= selected($filters['sort'], 'size') ?>>Por talla</option>
+          <option value="category" <?= selected($filters['sort'], 'category') ?>>Por categoría</option>
           <option value="sold-date" <?= selected($filters['sort'], 'sold-date') ?>>Fecha de venta</option>
         </select>
       </label>
@@ -160,12 +177,16 @@ include __DIR__ . '/includes/header.php';
           <h2><?= e($title) ?></h2>
           <p><?= count($items) ?> prenda<?= count($items) === 1 ? '' : 's' ?> encontrada<?= count($items) === 1 ? '' : 's' ?></p>
         </div>
-        <span class="pill"><?= str_contains($title, 'Vendidos') ? 'Historial' : 'Disponible' ?></span>
+        <span class="pill"><?= str_contains($title, 'Vendidos') ? 'Historial' : 'Categoría' ?></span>
       </div>
 
       <div class="grid">
         <?php foreach ($items as $dress): ?>
-          <article class="dress-card <?= $dress['status'] === 'sold' ? 'is-sold' : '' ?>">
+          <article
+            id="prenda-<?= (int)$dress['id'] ?>"
+            class="dress-card <?= $dress['status'] === 'sold' ? 'is-sold' : '' ?>"
+            data-product-card
+          >
             <?php if ($dress['status'] === 'sold'): ?>
               <div class="sold-ribbon">Vendido</div>
             <?php endif; ?>
@@ -225,10 +246,29 @@ include __DIR__ . '/includes/header.php';
             <div class="dress-info">
               <h3><?= e($dress['name']) ?></h3>
               <div class="meta">
+                <span class="badge category"><?= e((string)$dress['category']) ?></span>
                 <span class="badge <?= $dress['status'] === 'sold' ? 'sold' : 'available' ?>"><?= status_label($dress['status']) ?></span>
                 <?php if ($dress['status'] === 'sold' && !empty($dress['sold_date'])): ?>
                   <span class="badge">Venta: <?= e($dress['sold_date']) ?></span>
                 <?php endif; ?>
+              </div>
+
+              <div class="card-actions">
+                <button
+                  class="btn soft small share-product"
+                  type="button"
+                  data-share-product
+                  data-product-id="<?= (int)$dress['id'] ?>"
+                  data-product-name="<?= e($dress['name']) ?>"
+                  data-product-category="<?= e((string)$dress['category']) ?>"
+                  data-product-size="<?= e((string)$dress['size']) ?>"
+                  data-product-price="<?= e(money_mx($dress['price'])) ?>"
+                  data-product-status="<?= e(status_label($dress['status'])) ?>"
+                  aria-label="Compartir <?= e($dress['name']) ?>"
+                >
+                  <span class="share-icon" aria-hidden="true">↗</span>
+                  <span>Compartir</span>
+                </button>
               </div>
             </div>
           </article>

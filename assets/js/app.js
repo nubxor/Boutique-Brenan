@@ -497,4 +497,126 @@ document.addEventListener('DOMContentLoaded', function () {
       resizeTimer = window.setTimeout(fitImageToScreen, 120);
     });
   }
+
+  // Botón para compartir cada prenda.
+  const shareButtons = document.querySelectorAll('[data-share-product]');
+
+  if (shareButtons.length) {
+    let toastTimer = null;
+    const shareToast = document.createElement('div');
+    shareToast.className = 'share-toast';
+    shareToast.setAttribute('role', 'status');
+    shareToast.setAttribute('aria-live', 'polite');
+    shareToast.setAttribute('aria-atomic', 'true');
+    document.body.appendChild(shareToast);
+
+    const showShareToast = function (message) {
+      shareToast.textContent = message;
+      shareToast.classList.add('is-visible');
+      window.clearTimeout(toastTimer);
+      toastTimer = window.setTimeout(function () {
+        shareToast.classList.remove('is-visible');
+      }, 2600);
+    };
+
+    const buildProductUrl = function (button) {
+      const productId = button.dataset.productId || '';
+      const url = new URL(window.location.href);
+      url.hash = productId ? 'prenda-' + productId : 'catalogo';
+      return url.href;
+    };
+
+    const buildShareText = function (button) {
+      const name = button.dataset.productName || 'Prenda';
+      const category = button.dataset.productCategory || '';
+      const size = button.dataset.productSize || '';
+      const price = button.dataset.productPrice || '';
+      const status = button.dataset.productStatus || '';
+      const details = [];
+
+      if (category) details.push(category);
+      if (size) details.push('Talla ' + size);
+      if (price) details.push(price);
+      if (status) details.push(status);
+
+      return 'Mira esta prenda en Brenan Boutique: ' + name +
+        (details.length ? ' · ' + details.join(' · ') : '') + '.';
+    };
+
+    const copyShareContent = async function (text, url) {
+      const content = text + '\n' + url;
+
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(content);
+        return;
+      }
+
+      const textarea = document.createElement('textarea');
+      textarea.value = content;
+      textarea.setAttribute('readonly', '');
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      textarea.style.pointerEvents = 'none';
+      document.body.appendChild(textarea);
+      textarea.select();
+      textarea.setSelectionRange(0, textarea.value.length);
+      const copied = document.execCommand('copy');
+      textarea.remove();
+
+      if (!copied) {
+        throw new Error('No fue posible copiar el enlace.');
+      }
+    };
+
+    shareButtons.forEach(function (button) {
+      button.addEventListener('click', async function () {
+        if (button.classList.contains('is-sharing')) return;
+
+        const url = buildProductUrl(button);
+        const text = buildShareText(button);
+        const title = 'Brenan Boutique · ' + (button.dataset.productName || 'Prenda');
+        button.classList.add('is-sharing');
+        button.disabled = true;
+
+        try {
+          if (typeof navigator.share === 'function') {
+            await navigator.share({ title: title, text: text, url: url });
+            showShareToast('Prenda compartida');
+          } else {
+            await copyShareContent(text, url);
+            showShareToast('Información y enlace copiados');
+          }
+        } catch (error) {
+          if (error && error.name === 'AbortError') {
+            return;
+          }
+
+          try {
+            await copyShareContent(text, url);
+            showShareToast('Información y enlace copiados');
+          } catch (copyError) {
+            showShareToast('No fue posible compartir esta prenda');
+          }
+        } finally {
+          button.disabled = false;
+          button.classList.remove('is-sharing');
+        }
+      });
+    });
+
+    const targetHash = decodeURIComponent(window.location.hash || '');
+    if (/^#prenda-\d+$/.test(targetHash)) {
+      const sharedCard = document.querySelector(targetHash);
+      if (sharedCard) {
+        window.setTimeout(function () {
+          sharedCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          sharedCard.classList.add('is-shared-target');
+          window.setTimeout(function () {
+            sharedCard.classList.remove('is-shared-target');
+          }, 3200);
+        }, 350);
+      }
+    }
+  }
+
 });
