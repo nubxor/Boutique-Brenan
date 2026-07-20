@@ -21,14 +21,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $error = 'Usuario o contraseña incorrectos.';
 }
 
-$page_title = 'Iniciar sesión | Galletitas';
+$page_title = 'Iniciar sesión | Brenan Boutique';
 include __DIR__ . '/../includes/header.php';
 ?>
 
 <main class="login-screen">
   <form class="login-card" method="post">
-    <div class="logo large">G</div>
-    <h1>Panel Galletitas</h1>
+    <div class="logo large">BB</div>
+    <h1>Panel Brenan Boutique</h1>
     <p>Ingresa para administrar vestidos, fotografías, tallas, precios y ventas.</p>
 
     <?php if ($error): ?>

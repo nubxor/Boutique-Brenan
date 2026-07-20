@@ -39,16 +39,16 @@ foreach (['XS','S','M','L','XL','XXL','Única'] as $defaultSize) {
     }
 }
 
-$page_title = ($id > 0 ? 'Editar vestido' : 'Agregar vestido') . ' | Galletitas';
+$page_title = ($id > 0 ? 'Editar vestido' : 'Agregar vestido') . ' | Brenan Boutique';
 include __DIR__ . '/../includes/header.php';
 ?>
 
 <header class="admin-header">
   <div class="wrap admin-top">
     <a class="brand" href="<?= BASE_URL ?>/admin/index.php">
-      <span class="logo">G</span>
+      <span class="logo">BB</span>
       <span>
-        <strong>Galletitas</strong>
+        <strong>Brenan Boutique</strong>
         <small><?= $id > 0 ? 'Editar vestido' : 'Nuevo vestido' ?></small>
       </span>
     </a>

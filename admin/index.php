@@ -14,16 +14,16 @@ $dresses = $stmt->fetchAll();
 
 $message = (string)($_GET['message'] ?? '');
 
-$page_title = 'Panel administrativo | Galletitas';
+$page_title = 'Panel administrativo | Brenan Boutique';
 include __DIR__ . '/../includes/header.php';
 ?>
 
 <header class="admin-header">
   <div class="wrap admin-top">
     <a class="brand" href="<?= BASE_URL ?>/index.php">
-      <span class="logo">G</span>
+      <span class="logo">BB</span>
       <span>
-        <strong>Galletitas</strong>
+        <strong>Brenan Boutique</strong>
         <small>Panel administrativo</small>
       </span>
     </a>
