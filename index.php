@@ -178,8 +178,7 @@ include __DIR__ . '/includes/header.php';
                   data-lightbox-alt="<?= e($dress['name']) ?>"
                   aria-label="Ampliar fotografía de <?= e($dress['name']) ?>"
                 >
-                  <img src="<?= UPLOAD_URL . '/' . e($dress['image']) ?>" alt="<?= e($dress['name']) ?>" loading="lazy">
-                  <span class="zoom-hint" aria-hidden="true">⌕ Ver detalle</span>
+                  <img src="<?= UPLOAD_URL . '/' . e($dress['image']) ?>" alt="<?= e($dress['name']) ?>" loading="lazy" decoding="async">
                 </button>
               <?php else: ?>
                 <div class="no-photo">Sin foto</div>
@@ -209,20 +208,26 @@ include __DIR__ . '/includes/header.php';
 
 <div class="lightbox" data-lightbox hidden aria-hidden="true">
   <div class="lightbox-backdrop" data-lightbox-close></div>
-  <section class="lightbox-dialog" role="dialog" aria-modal="true" aria-label="Vista ampliada de la prenda">
-    <div class="lightbox-toolbar">
-      <div class="lightbox-title" data-lightbox-title>Detalle de la prenda</div>
-      <div class="lightbox-actions" aria-label="Controles de zoom">
-        <button class="lightbox-control" type="button" data-zoom-out aria-label="Alejar imagen">−</button>
-        <button class="lightbox-control zoom-level" type="button" data-zoom-reset aria-label="Restablecer zoom">100%</button>
-        <button class="lightbox-control" type="button" data-zoom-in aria-label="Acercar imagen">+</button>
-        <button class="lightbox-control close" type="button" data-lightbox-close aria-label="Cerrar imagen">×</button>
+  <section class="lightbox-dialog" role="dialog" aria-modal="true" aria-label="Fotografía completa de la prenda">
+    <div class="lightbox-stage" data-lightbox-stage>
+      <div class="lightbox-scroll-content" data-lightbox-content>
+        <div class="lightbox-canvas" data-lightbox-canvas>
+          <img data-lightbox-image src="" alt="" decoding="async">
+        </div>
       </div>
     </div>
-    <div class="lightbox-stage" data-lightbox-stage>
-      <img data-lightbox-image src="" alt="">
+
+    <div class="lightbox-actions" aria-label="Controles de imagen">
+      <button class="lightbox-control" type="button" data-zoom-out aria-label="Alejar fotografía">−</button>
+      <button class="lightbox-control zoom-level" type="button" data-zoom-reset aria-label="Mostrar fotografía completa">
+        <span data-zoom-level>Completa</span>
+      </button>
+      <button class="lightbox-control" type="button" data-zoom-in aria-label="Acercar fotografía">+</button>
+      <button class="lightbox-control close" type="button" data-lightbox-close aria-label="Cerrar fotografía">×</button>
     </div>
-    <p class="lightbox-help">Usa los botones + y −, la rueda del mouse o toca dos veces la imagen para acercar.</p>
+
+    <div class="lightbox-caption" data-lightbox-title>Detalle de la prenda</div>
+    <div class="lightbox-loading" data-lightbox-loading aria-live="polite">Cargando fotografía…</div>
   </section>
 </div>
 
