@@ -1,0 +1,27 @@
+# Evita que se ejecuten scripts dentro de uploads
+Options -Indexes
+
+<FilesMatch "\.(php|php5|phtml|phar|cgi|pl|py|sh)$">
+  Require all denied
+</FilesMatch>
+
+
+<IfModule mod_mime.c>
+  AddType image/webp .webp
+  AddType image/jpeg .jpg .jpeg
+</IfModule>
+
+# Las imágenes usan nombres únicos, por lo que pueden conservarse en caché.
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType image/jpeg "access plus 1 year"
+  ExpiresByType image/png "access plus 1 year"
+  ExpiresByType image/webp "access plus 1 year"
+  ExpiresByType image/gif "access plus 1 year"
+</IfModule>
+
+<IfModule mod_headers.c>
+  <FilesMatch "\.(jpe?g|png|webp|gif)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+</IfModule>
