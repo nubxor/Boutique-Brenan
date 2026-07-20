@@ -41,7 +41,10 @@ include __DIR__ . '/../includes/header.php';
       <h1>Vestidos registrados</h1>
       <p>Agrega, edita, elimina y marca vestidos como vendidos.</p>
     </div>
-    <a class="btn primary" href="<?= BASE_URL ?>/admin/dress-form.php">+ Agregar vestido</a>
+    <div class="top-actions">
+      <a class="btn" href="<?= BASE_URL ?>/admin/optimize-images.php">Optimizar imágenes</a>
+      <a class="btn primary" href="<?= BASE_URL ?>/admin/dress-form.php">+ Agregar vestido</a>
+    </div>
   </div>
 
   <?php if ($message): ?>
@@ -71,7 +74,7 @@ include __DIR__ . '/../includes/header.php';
             <tr>
               <td>
                 <?php if (!empty($dress['image'])): ?>
-                  <img class="thumb" src="<?= UPLOAD_URL . '/' . e($dress['image']) ?>" alt="<?= e($dress['name']) ?>">
+                  <img class="thumb" src="<?= e(image_public_url($dress['image'], 480)) ?>" alt="<?= e($dress['name']) ?>" loading="lazy" decoding="async">
                 <?php else: ?>
                   <span class="thumb no-thumb">—</span>
                 <?php endif; ?>

@@ -81,13 +81,14 @@ include __DIR__ . '/../includes/header.php';
 
           <div class="preview">
             <?php if (!empty($dress['image'])): ?>
-              <img src="<?= UPLOAD_URL . '/' . e($dress['image']) ?>" alt="<?= e($dress['name']) ?>">
+              <img src="<?= e(image_public_url($dress['image'], 480)) ?>" alt="<?= e($dress['name']) ?>" decoding="async">
             <?php else: ?>
               <span>Vista previa</span>
             <?php endif; ?>
           </div>
 
-          <small>Formatos permitidos: JPG, PNG, WEBP o GIF. Máximo 5 MB.</small>
+          <small>JPG, PNG, WEBP o GIF, máximo 5 MB. Al guardar, el sistema crea automáticamente versiones ligeras para celular y conserva una imagen de alta calidad para el detalle.</small>
+          <div class="upload-optimization-status" data-upload-status hidden aria-live="polite"></div>
         </div>
 
         <div class="fields">
