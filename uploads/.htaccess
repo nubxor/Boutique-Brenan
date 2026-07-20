@@ -1,6 +1,0 @@
-# Evita que se ejecuten scripts dentro de uploads
-Options -Indexes
-
-<FilesMatch "\.(php|php5|phtml|phar|cgi|pl|py|sh)$">
-  Require all denied
-</FilesMatch>
