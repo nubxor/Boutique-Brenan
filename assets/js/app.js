@@ -520,6 +520,11 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     const buildProductUrl = function (button) {
+      const directUrl = button.dataset.productUrl || '';
+      if (directUrl) {
+        return new URL(directUrl, window.location.href).href;
+      }
+
       const productId = button.dataset.productId || '';
       const url = new URL(window.location.href);
       url.hash = productId ? 'prenda-' + productId : 'catalogo';
