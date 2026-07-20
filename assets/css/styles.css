@@ -1137,3 +1137,96 @@ body.lightbox-open{
     min-height:46px;
   }
 }
+
+
+/* Compartir prendas V11 */
+.card-actions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+  margin-top:13px;
+  padding-top:12px;
+  border-top:1px solid var(--line);
+}
+
+.share-product{
+  min-height:38px;
+  padding:8px 13px;
+  box-shadow:none;
+}
+
+.share-product:hover{
+  box-shadow:0 10px 20px rgba(133,79,101,.12);
+}
+
+.share-product.is-sharing{
+  opacity:.68;
+  cursor:wait;
+}
+
+.share-icon{
+  display:inline-grid;
+  place-items:center;
+  width:1.05em;
+  height:1.05em;
+  font-size:1.05rem;
+  line-height:1;
+}
+
+.share-toast{
+  position:fixed;
+  z-index:1200;
+  left:50%;
+  bottom:max(18px, env(safe-area-inset-bottom));
+  width:max-content;
+  max-width:calc(100% - 28px);
+  transform:translate(-50%, 18px);
+  padding:11px 15px;
+  border:1px solid rgba(255,255,255,.20);
+  border-radius:999px;
+  background:rgba(66,39,52,.94);
+  color:#fff;
+  box-shadow:0 16px 38px rgba(30,12,22,.28);
+  font-weight:800;
+  text-align:center;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .2s ease, transform .2s ease;
+}
+
+.share-toast.is-visible{
+  opacity:1;
+  transform:translate(-50%, 0);
+}
+
+.dress-card.is-shared-target{
+  animation:shared-product-highlight 2.8s ease;
+}
+
+@keyframes shared-product-highlight{
+  0%, 100%{
+    box-shadow:0 18px 38px rgba(111,47,78,.10);
+  }
+  18%, 72%{
+    box-shadow:0 0 0 5px rgba(207,147,166,.34), 0 24px 54px rgba(111,47,78,.20);
+  }
+}
+
+@media (max-width:460px){
+  .card-actions{
+    justify-content:stretch;
+  }
+
+  .share-product{
+    width:100%;
+  }
+}
+
+@media (prefers-reduced-motion:reduce){
+  .share-toast,
+  .dress-card.is-shared-target{
+    transition:none;
+    animation:none;
+  }
+}
