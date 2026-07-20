@@ -37,17 +37,17 @@ foreach ($dresses as $dress) {
     $groups[$group][] = $dress;
 }
 
-$page_title = 'Catálogo Digital | Galletitas';
+$page_title = 'Catálogo Digital | Brenan Boutique';
 include __DIR__ . '/includes/header.php';
 ?>
 
 <header class="hero">
   <div class="wrap">
     <nav class="topbar">
-      <a class="brand" href="<?= BASE_URL ?>/index.php" aria-label="Galletitas">
-        <span class="logo">G</span>
+      <a class="brand" href="<?= BASE_URL ?>/index.php" aria-label="Brenan Boutique">
+        <span class="logo">BB</span>
         <span>
-          <strong>Galletitas</strong>
+          <strong>Brenan Boutique</strong>
           <small>Catálogo digital de vestidos</small>
         </span>
       </a>
