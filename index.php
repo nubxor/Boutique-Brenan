@@ -96,12 +96,11 @@ include __DIR__ . '/includes/header.php';
 
     <section class="premium-hero" aria-labelledby="premium-hero-title">
       <div class="premium-hero-copy">
-        <span class="premium-kicker">Selección Brenan Boutique</span>
         <h1 id="premium-hero-title" class="premium-hero-title">
           <span>Prendas seleccionadas</span>
           para hacer especial cada momento.
         </h1>
-        <p class="premium-hero-subtitle">Explora prendas elegidas con cuidado y encuentra fácilmente el estilo ideal para ti.</p>
+        <p class="premium-hero-subtitle">Descubre una selección cuidada de prendas y encuentra fácilmente el estilo ideal para ti.</p>
 
         <div class="premium-hero-actions">
           <a class="btn primary" href="#catalogo">Ver catálogo</a>

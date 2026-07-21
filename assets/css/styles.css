@@ -3223,3 +3223,176 @@ body{
     line-height:1.15;
   }
 }
+
+
+/* BRENAN BOUTIQUE V19 | Hero refinado, más compacto y profesional */
+.premium-hero{
+  gap:14px;
+  padding:26px 24px 22px;
+  border-radius:28px;
+  background:linear-gradient(180deg, rgba(255,251,252,.98), rgba(255,246,249,.96));
+  box-shadow:0 12px 32px rgba(119,72,92,.10);
+}
+
+.premium-hero::before,
+.premium-hero::after{
+  display:none;
+}
+
+.premium-hero-copy{
+  width:min(720px,100%);
+}
+
+.premium-hero-title{
+  max-width:14ch;
+  font-size:clamp(2rem, 3.4vw, 3rem);
+  line-height:.98;
+  letter-spacing:-.05em;
+}
+
+.premium-hero-title span{
+  display:block;
+  margin-bottom:4px;
+  color:var(--brand-dark);
+  font-style:italic;
+}
+
+.premium-hero-subtitle{
+  width:min(520px,100%);
+  margin-top:12px;
+  font-size:.98rem;
+  line-height:1.52;
+}
+
+.premium-hero-actions{
+  margin-top:16px;
+}
+
+.premium-hero-actions .btn{
+  min-width:136px;
+  min-height:42px;
+  padding:10px 16px;
+}
+
+.premium-metrics{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0,1fr));
+  gap:10px;
+  width:min(440px,100%);
+  padding:0;
+  border:0;
+  background:transparent;
+  box-shadow:none;
+}
+
+.premium-metric{
+  min-height:84px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:6px;
+  padding:14px 12px;
+  border:1px solid rgba(229,200,211,.92);
+  border-radius:20px;
+  background:rgba(255,255,255,.82);
+  box-shadow:0 8px 20px rgba(119,72,92,.06);
+  text-align:center;
+}
+
+.premium-metric strong{
+  font-size:1.6rem;
+  line-height:1;
+}
+
+.premium-metric span{
+  font-size:.84rem;
+  line-height:1.2;
+}
+
+.premium-metric-divider{
+  display:none;
+}
+
+@media (max-width:760px){
+  .compact-hero{
+    padding:8px 0 6px;
+  }
+
+  .compact-hero .topbar{
+    margin-bottom:10px;
+  }
+
+  .premium-hero{
+    gap:12px;
+    padding:20px 16px 18px;
+    border-radius:22px;
+  }
+
+  .premium-hero-title{
+    max-width:12ch;
+    font-size:clamp(1.72rem, 6.6vw, 2.28rem);
+    line-height:1.02;
+  }
+
+  .premium-hero-title span{
+    margin-bottom:2px;
+  }
+
+  .premium-hero-subtitle{
+    max-width:33ch;
+    margin-top:10px;
+    font-size:.86rem;
+    line-height:1.45;
+  }
+
+  .premium-hero-actions{
+    width:100%;
+    margin-top:13px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+
+  .premium-hero-actions .btn{
+    min-width:0;
+    width:100%;
+    min-height:40px;
+    font-size:.8rem;
+  }
+
+  .premium-metrics{
+    width:100%;
+    gap:8px;
+  }
+
+  .premium-metric{
+    min-height:72px;
+    padding:11px 8px;
+    border-radius:18px;
+  }
+
+  .premium-metric strong{
+    font-size:1.3rem;
+  }
+
+  .premium-metric span{
+    font-size:.74rem;
+  }
+}
+
+@media (max-width:430px){
+  .premium-hero{
+    padding:18px 14px 16px;
+  }
+
+  .premium-hero-title{
+    max-width:11.5ch;
+    font-size:clamp(1.58rem, 8.1vw, 2rem);
+  }
+
+  .premium-hero-subtitle{
+    max-width:29ch;
+    font-size:.81rem;
+  }
+}
