@@ -2651,3 +2651,278 @@ body{
     font-size:1.9rem;
   }
 }
+
+
+/* BRENAN BOUTIQUE V17 | Portada profesional y compatibilidad Chrome Android */
+html{
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+  overflow-x:hidden;
+}
+
+body{
+  width:100%;
+  overflow-x:hidden;
+}
+
+.compact-hero .topbar,
+.compact-hero .brand,
+.boutique-intro,
+.boutique-intro-copy,
+.boutique-title,
+.boutique-stats{
+  min-width:0;
+  max-width:100%;
+}
+
+.boutique-intro{
+  display:flex !important;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:22px;
+  text-align:center;
+  padding:clamp(26px,5vw,50px);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(246,223,231,.72), transparent 24rem),
+    rgba(255,249,251,.96);
+}
+
+.boutique-intro-copy{
+  width:min(760px,100%);
+  margin-inline:auto;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+.boutique-intro .eyebrow{
+  margin:0 auto 17px;
+  padding:8px 14px;
+  border-color:#e7c8d3;
+  background:rgba(255,255,255,.72);
+  box-shadow:0 8px 22px rgba(133,79,101,.07);
+}
+
+.boutique-title{
+  width:100%;
+  margin:0 auto;
+  color:var(--ink);
+  font-family:Georgia, "Times New Roman", serif;
+  font-size:clamp(2.5rem,6vw,4.6rem) !important;
+  font-weight:600;
+  line-height:1.02 !important;
+  letter-spacing:-.045em !important;
+  text-align:center;
+  text-wrap:balance;
+  overflow-wrap:normal !important;
+  word-break:normal !important;
+}
+
+.boutique-title span{
+  display:block;
+}
+
+.boutique-title span:first-child{
+  color:var(--brand-dark);
+  font-style:italic;
+}
+
+.boutique-ornament{
+  width:min(240px,70%);
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  align-items:center;
+  gap:10px;
+  margin:18px auto 14px;
+  color:var(--brand);
+}
+
+.boutique-ornament i{
+  height:1px;
+  background:linear-gradient(90deg, transparent, rgba(171,95,106,.55));
+}
+
+.boutique-ornament i:last-child{
+  background:linear-gradient(90deg, rgba(171,95,106,.55), transparent);
+}
+
+.boutique-ornament b{
+  font-size:.82rem;
+}
+
+.boutique-subtitle{
+  display:block !important;
+  width:min(590px,100%);
+  margin:0 auto !important;
+  color:var(--muted);
+  font-size:clamp(.94rem,2vw,1.05rem) !important;
+  line-height:1.55 !important;
+  text-align:center;
+}
+
+.boutique-stats{
+  width:min(520px,100%);
+  margin-inline:auto;
+  display:grid !important;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  gap:12px;
+}
+
+.boutique-stats .stat{
+  display:flex;
+  min-height:104px;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:16px 12px;
+  border-color:#ead1da;
+  background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(255,246,249,.96));
+  box-shadow:0 12px 28px rgba(133,79,101,.07);
+  text-align:center;
+}
+
+.boutique-stats .stat strong{
+  color:var(--ink);
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:2rem;
+  font-weight:600;
+}
+
+.boutique-stats .stat span{
+  max-width:14ch;
+  margin-top:6px;
+  color:var(--muted);
+  font-size:.83rem;
+  line-height:1.25;
+}
+
+@media (max-width:760px){
+  .compact-hero{
+    padding:12px 0 8px;
+  }
+
+  .compact-hero .topbar{
+    display:flex !important;
+    flex-direction:row !important;
+    align-items:center !important;
+    justify-content:center !important;
+    margin-bottom:13px;
+  }
+
+  .compact-hero .brand{
+    width:auto;
+    justify-content:center;
+  }
+
+  .compact-hero .top-actions{
+    display:none !important;
+  }
+
+  .boutique-intro{
+    gap:18px;
+    padding:27px 18px 21px !important;
+    border-radius:28px !important;
+  }
+
+  .boutique-title{
+    max-width:18ch !important;
+    font-size:clamp(2.22rem,10.3vw,3.25rem) !important;
+    line-height:1.01 !important;
+  }
+
+  .boutique-title span:first-child{
+    margin-bottom:3px;
+  }
+
+  .boutique-ornament{
+    margin:15px auto 11px;
+  }
+
+  .boutique-subtitle{
+    max-width:34ch;
+    font-size:.94rem !important;
+  }
+
+  .boutique-stats{
+    gap:10px;
+  }
+
+  .boutique-stats .stat{
+    min-height:94px;
+    border-radius:20px;
+  }
+
+  .boutique-stats .stat strong{
+    font-size:1.75rem;
+  }
+
+  .boutique-stats .stat span{
+    font-size:.77rem;
+  }
+}
+
+@media (max-width:430px){
+  .compact-hero .brand-mark{
+    width:58px !important;
+    height:58px !important;
+    flex-basis:58px !important;
+  }
+
+  .compact-hero .brand-copy strong{
+    font-size:1.18rem !important;
+  }
+
+  .compact-hero .brand-copy small{
+    font-size:.73rem !important;
+  }
+
+  .boutique-intro{
+    padding:24px 14px 18px !important;
+    border-radius:24px !important;
+  }
+
+  .boutique-intro .eyebrow{
+    margin-bottom:14px;
+    font-size:.72rem;
+  }
+
+  .boutique-title{
+    max-width:16ch !important;
+    font-size:clamp(2.05rem,10.5vw,2.75rem) !important;
+  }
+
+  .boutique-subtitle{
+    max-width:31ch;
+    font-size:.88rem !important;
+  }
+
+  .boutique-stats{
+    gap:8px;
+  }
+
+  .boutique-stats .stat{
+    min-height:88px;
+    padding:12px 8px;
+    border-radius:18px;
+  }
+
+  .boutique-stats .stat strong{
+    font-size:1.62rem;
+  }
+
+  .boutique-stats .stat span{
+    font-size:.72rem;
+  }
+}
+
+@media (max-width:350px){
+  .boutique-title{
+    max-width:none !important;
+    font-size:1.93rem !important;
+  }
+
+  .boutique-stats{
+    grid-template-columns:1fr !important;
+  }
+}

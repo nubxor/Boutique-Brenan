@@ -11,6 +11,9 @@ $og_image_url = isset($og_image_url) ? trim((string)$og_image_url) : '';
 $og_type = isset($og_type) ? trim((string)$og_type) : 'website';
 
 header_remove('X-Powered-By');
+header('Cache-Control: no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: SAMEORIGIN');
 header('Referrer-Policy: strict-origin-when-cross-origin');
@@ -20,13 +23,14 @@ header("Content-Security-Policy: default-src 'self'; base-uri 'self'; form-actio
 
 $isAdminPage = str_contains((string)($_SERVER['SCRIPT_NAME'] ?? ''), '/admin/');
 $cssPath = __DIR__ . '/../assets/css/styles.css';
-$cssVersion = is_file($cssPath) ? (int)filemtime($cssPath) : 1;
+$cssVersion = 'v17-' . (is_file($cssPath) ? (string)filemtime($cssPath) : '1');
 ?>
 <!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f8e5ec">
   <title><?= e($page_title) ?></title>
   <meta name="description" content="<?= e($page_description) ?>">
   <?php if ($canonical_url !== ''): ?>

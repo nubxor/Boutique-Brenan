@@ -94,16 +94,20 @@ include __DIR__ . '/includes/header.php';
       </div>
     </nav>
 
-    <section class="hero-card hero-card-compact">
-      <div>
+    <section class="hero-card hero-card-compact boutique-intro">
+      <div class="boutique-intro-copy">
         <span class="eyebrow">✦ Brenan Boutique</span>
-        <h1>Prendas seleccionadas para hacer especial cada momento.</h1>
-        <p>Busca por nombre o entra directamente a una categoría. Los filtros adicionales permanecen disponibles sin ocupar espacio en pantalla.</p>
+        <h1 class="boutique-title">
+          <span>Prendas seleccionadas</span>
+          <span>para hacer especial cada momento.</span>
+        </h1>
+        <div class="boutique-ornament" aria-hidden="true"><i></i><b>✦</b><i></i></div>
+        <p class="boutique-subtitle">Descubre estilos elegidos con cuidado y encuentra fácilmente la prenda ideal para ti.</p>
       </div>
 
-      <div class="stats compact-stats" aria-label="Resumen del catálogo">
-        <div class="stat"><strong><?= $availableCount ?></strong><span>Disponibles</span></div>
-        <div class="stat"><strong><?= $categoryCount ?></strong><span>Categorías</span></div>
+      <div class="stats compact-stats boutique-stats" aria-label="Resumen del catálogo">
+        <div class="stat"><strong><?= $availableCount ?></strong><span>Prendas disponibles</span></div>
+        <div class="stat"><strong><?= $categoryCount ?></strong><span>Categorías para explorar</span></div>
       </div>
     </section>
   </div>
