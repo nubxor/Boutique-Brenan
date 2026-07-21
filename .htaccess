@@ -1,19 +1,32 @@
-# Brenan Boutique: protección básica de archivos sensibles.
+# BRENAN BOUTIQUE V14 | Protección del servidor Apache
+Options -Indexes
+ServerSignature Off
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{REQUEST_METHOD} ^(?:TRACE|TRACK)$ [NC]
+  RewriteRule ^ - [F,L]
+</IfModule>
+
+# Impide descargar configuraciones, respaldos y código auxiliar.
 <IfModule mod_authz_core.c>
-  <FilesMatch "(^\.env|^config\.php$|^database\.sql$|^README\.md$|^\.git)">
+  <FilesMatch "(?i)(^\.env|^\.git|^\.ht|^config\.php$|^database\.sql$|^composer\.(json|lock)$|^package(-lock)?\.json$|^phpunit\.xml$|\.(?:bak|old|orig|save|swp|sql|log|ini|ya?ml|phps|inc|map|zip|tar|gz)$)">
     Require all denied
   </FilesMatch>
 </IfModule>
 
 <IfModule !mod_authz_core.c>
-  <FilesMatch "(^\.env|^config\.php$|^database\.sql$|^README\.md$|^\.git)">
+  <FilesMatch "(?i)(^\.env|^\.git|^\.ht|^config\.php$|^database\.sql$|^composer\.(json|lock)$|^package(-lock)?\.json$|^phpunit\.xml$|\.(?:bak|old|orig|save|swp|sql|log|ini|ya?ml|phps|inc|map|zip|tar|gz)$)">
     Order allow,deny
     Deny from all
   </FilesMatch>
 </IfModule>
 
 <IfModule mod_headers.c>
+  Header always unset X-Powered-By
   Header always set X-Content-Type-Options "nosniff"
   Header always set X-Frame-Options "SAMEORIGIN"
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set X-Permitted-Cross-Domain-Policies "none"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
 </IfModule>
