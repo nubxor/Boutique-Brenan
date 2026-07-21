@@ -94,20 +94,31 @@ include __DIR__ . '/includes/header.php';
       </div>
     </nav>
 
-    <section class="hero-card hero-card-compact boutique-intro">
-      <div class="boutique-intro-copy">
-        <span class="eyebrow">✦ Brenan Boutique</span>
-        <h1 class="boutique-title">
+    <section class="premium-hero" aria-labelledby="premium-hero-title">
+      <div class="premium-hero-copy">
+        <span class="premium-kicker">Selección Brenan Boutique</span>
+        <h1 id="premium-hero-title" class="premium-hero-title">
           <span>Prendas seleccionadas</span>
-          <span>para hacer especial cada momento.</span>
+          para hacer especial cada momento.
         </h1>
-        <div class="boutique-ornament" aria-hidden="true"><i></i><b>✦</b><i></i></div>
-        <p class="boutique-subtitle">Descubre estilos elegidos con cuidado y encuentra fácilmente la prenda ideal para ti.</p>
+        <p class="premium-hero-subtitle">Explora prendas elegidas con cuidado y encuentra fácilmente el estilo ideal para ti.</p>
+
+        <div class="premium-hero-actions">
+          <a class="btn primary" href="#catalogo">Ver catálogo</a>
+          <a class="btn soft" href="#categorias">Explorar categorías</a>
+        </div>
       </div>
 
-      <div class="stats compact-stats boutique-stats" aria-label="Resumen del catálogo">
-        <div class="stat"><strong><?= $availableCount ?></strong><span>Prendas disponibles</span></div>
-        <div class="stat"><strong><?= $categoryCount ?></strong><span>Categorías para explorar</span></div>
+      <div class="premium-metrics" aria-label="Resumen del catálogo">
+        <div class="premium-metric">
+          <strong><?= $availableCount ?></strong>
+          <span>prendas disponibles</span>
+        </div>
+        <span class="premium-metric-divider" aria-hidden="true"></span>
+        <div class="premium-metric">
+          <strong><?= $categoryCount ?></strong>
+          <span>categorías</span>
+        </div>
       </div>
     </section>
   </div>

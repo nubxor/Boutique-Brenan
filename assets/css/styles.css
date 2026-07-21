@@ -2926,3 +2926,300 @@ body{
     grid-template-columns:1fr !important;
   }
 }
+
+
+/* BRENAN BOUTIQUE V18 | Portada boutique premium compacta */
+.premium-hero{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:22px;
+  padding:clamp(28px,4vw,46px) clamp(22px,5vw,64px);
+  border:1px solid rgba(229,196,208,.92);
+  border-radius:30px;
+  background:
+    radial-gradient(circle at 12% 15%, rgba(224,170,190,.18), transparent 17rem),
+    radial-gradient(circle at 88% 90%, rgba(242,205,181,.16), transparent 18rem),
+    linear-gradient(145deg, rgba(255,252,253,.98), rgba(255,244,248,.96));
+  box-shadow:0 18px 46px rgba(119,72,92,.12);
+  text-align:center;
+}
+
+.premium-hero::before,
+.premium-hero::after{
+  content:'';
+  position:absolute;
+  z-index:-1;
+  width:170px;
+  height:170px;
+  border:1px solid rgba(207,142,162,.14);
+  border-radius:50%;
+}
+
+.premium-hero::before{
+  top:-105px;
+  left:-78px;
+}
+
+.premium-hero::after{
+  right:-92px;
+  bottom:-118px;
+}
+
+.premium-hero-copy{
+  width:min(790px,100%);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+.premium-kicker{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  margin-bottom:13px;
+  padding:7px 12px;
+  border:1px solid #e8ccd6;
+  border-radius:999px;
+  background:rgba(255,255,255,.72);
+  color:var(--brand-dark);
+  font-size:.76rem;
+  font-weight:900;
+  letter-spacing:.075em;
+  text-transform:uppercase;
+}
+
+.premium-kicker::before{
+  content:'✦';
+  font-size:.72rem;
+}
+
+.premium-hero-title{
+  width:100%;
+  max-width:21ch;
+  margin:0;
+  color:var(--ink);
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:clamp(2.4rem,4.6vw,3.75rem);
+  font-weight:600;
+  line-height:1.04;
+  letter-spacing:-.042em;
+  text-align:center;
+  text-wrap:balance;
+}
+
+.premium-hero-title span{
+  color:var(--brand-dark);
+  font-style:italic;
+}
+
+.premium-hero-subtitle{
+  width:min(560px,100%);
+  margin:15px auto 0;
+  color:var(--muted);
+  font-size:clamp(.94rem,1.6vw,1.05rem);
+  line-height:1.55;
+}
+
+.premium-hero-actions{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin-top:19px;
+}
+
+.premium-hero-actions .btn{
+  min-width:150px;
+  min-height:44px;
+  box-shadow:none;
+}
+
+.premium-metrics{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:18px;
+  max-width:100%;
+  padding:11px 18px;
+  border:1px solid rgba(229,200,211,.92);
+  border-radius:999px;
+  background:rgba(255,255,255,.72);
+  box-shadow:0 10px 25px rgba(119,72,92,.07);
+}
+
+.premium-metric{
+  display:flex;
+  align-items:baseline;
+  gap:7px;
+  white-space:nowrap;
+}
+
+.premium-metric strong{
+  color:var(--ink);
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:1.35rem;
+  font-weight:600;
+}
+
+.premium-metric span{
+  color:var(--muted);
+  font-size:.82rem;
+  font-weight:700;
+}
+
+.premium-metric-divider{
+  width:1px;
+  height:25px;
+  background:#e5cbd5;
+}
+
+/* Se anula la portada amplia de V17 */
+.boutique-intro,
+.boutique-intro-copy,
+.boutique-title,
+.boutique-subtitle,
+.boutique-stats,
+.boutique-ornament{
+  all:unset;
+}
+
+@media (max-width:760px){
+  .compact-hero{
+    padding:10px 0 7px;
+  }
+
+  .compact-hero .topbar{
+    margin-bottom:10px;
+  }
+
+  .premium-hero{
+    gap:16px;
+    padding:22px 17px 18px;
+    border-radius:24px;
+  }
+
+  .premium-kicker{
+    margin-bottom:10px;
+    padding:6px 10px;
+    font-size:.68rem;
+  }
+
+  .premium-hero-title{
+    max-width:18ch;
+    font-size:clamp(1.95rem,8.4vw,2.65rem);
+    line-height:1.05;
+  }
+
+  .premium-hero-subtitle{
+    max-width:34ch;
+    margin-top:11px;
+    font-size:.88rem;
+    line-height:1.48;
+  }
+
+  .premium-hero-actions{
+    width:100%;
+    margin-top:15px;
+  }
+
+  .premium-hero-actions .btn{
+    flex:1;
+    min-width:0;
+    min-height:42px;
+    padding:10px 12px;
+    font-size:.82rem;
+  }
+
+  .premium-metrics{
+    gap:12px;
+    padding:9px 14px;
+  }
+
+  .premium-metric{
+    gap:5px;
+  }
+
+  .premium-metric strong{
+    font-size:1.2rem;
+  }
+
+  .premium-metric span{
+    font-size:.72rem;
+  }
+
+  .premium-metric-divider{
+    height:22px;
+  }
+
+  .catalog-controls{
+    margin-top:0;
+  }
+}
+
+@media (max-width:430px){
+  .premium-hero{
+    padding:19px 14px 16px;
+    border-radius:21px;
+  }
+
+  .premium-hero-title{
+    max-width:17ch;
+    font-size:clamp(1.82rem,8.8vw,2.25rem);
+  }
+
+  .premium-hero-subtitle{
+    max-width:31ch;
+    font-size:.83rem;
+  }
+
+  .premium-hero-actions{
+    gap:8px;
+  }
+
+  .premium-hero-actions .btn{
+    font-size:.78rem;
+    padding-inline:9px;
+  }
+
+  .premium-metrics{
+    width:100%;
+    justify-content:space-evenly;
+    gap:8px;
+    border-radius:17px;
+  }
+
+  .premium-metric{
+    flex-direction:column;
+    align-items:center;
+    gap:1px;
+  }
+
+  .premium-metric strong{
+    font-size:1.25rem;
+  }
+
+  .premium-metric span{
+    font-size:.68rem;
+  }
+}
+
+@media (max-width:350px){
+  .premium-hero-title{
+    max-width:none;
+    font-size:1.72rem;
+  }
+
+  .premium-hero-actions{
+    display:grid;
+    grid-template-columns:1fr;
+  }
+
+  .premium-metric span{
+    max-width:9ch;
+    white-space:normal;
+    line-height:1.15;
+  }
+}
