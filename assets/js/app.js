@@ -1,5 +1,18 @@
 // BRENAN BOUTIQUE | Interacciones del catálogo y panel administrativo
 document.addEventListener('DOMContentLoaded', function () {
+  const activeCategoryChip = document.querySelector('[data-category-chips] .category-chip.is-active');
+  if (activeCategoryChip) {
+    window.requestAnimationFrame(function () {
+      const strip = activeCategoryChip.closest('[data-category-chips]');
+      if (!strip) return;
+      const chipRect = activeCategoryChip.getBoundingClientRect();
+      const stripRect = strip.getBoundingClientRect();
+      if (chipRect.left < stripRect.left || chipRect.right > stripRect.right) {
+        activeCategoryChip.scrollIntoView({ block: 'nearest', inline: 'center' });
+      }
+    });
+  }
+
   const toggle = document.querySelector('[data-toggle-filters]');
   const filters = document.querySelector('[data-filters]');
 

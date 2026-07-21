@@ -32,6 +32,21 @@ $availableCount = (int)$pdo->query("SELECT COUNT(*) FROM dresses WHERE status='a
 $soldCount = (int)$pdo->query("SELECT COUNT(*) FROM dresses WHERE status='sold'")->fetchColumn();
 $categoryCount = (int)$pdo->query("SELECT COUNT(DISTINCT category) FROM dresses WHERE category <> ''")->fetchColumn();
 
+$categoryCountSql = "SELECT category, COUNT(*) AS total FROM dresses";
+$categoryCountParams = [];
+if ($filters['status'] !== 'all') {
+    $categoryCountSql .= " WHERE status = :status";
+    $categoryCountParams['status'] = $filters['status'];
+}
+$categoryCountSql .= " GROUP BY category ORDER BY category ASC";
+$categoryCountStmt = $pdo->prepare($categoryCountSql);
+$categoryCountStmt->execute($categoryCountParams);
+$categoryCounts = [];
+foreach ($categoryCountStmt->fetchAll() as $row) {
+    $categoryCounts[normalize_category((string)$row['category'])] = (int)$row['total'];
+}
+$visibleCategoryTotal = array_sum($categoryCounts);
+
 $groups = [];
 foreach ($dresses as $dress) {
     $category = normalize_category((string)($dress['category'] ?? 'Otros'));
@@ -41,11 +56,31 @@ foreach ($dresses as $dress) {
     $groups[$group][] = $dress;
 }
 
+$advancedFiltersActive =
+    $filters['size'] !== 'all' ||
+    $filters['min_price'] !== '' ||
+    $filters['max_price'] !== '' ||
+    $filters['sold_date'] !== '' ||
+    $filters['sort'] !== 'newest';
+
+$catalogUrl = static function (array $changes = [], array $remove = []) use ($filters): string {
+    $params = array_merge($filters, $changes);
+    foreach ($remove as $key) {
+        unset($params[$key]);
+    }
+    foreach ($params as $key => $value) {
+        if ($value === '' || ($value === 'all' && in_array($key, ['size'], true))) {
+            unset($params[$key]);
+        }
+    }
+    return BASE_URL . '/index.php?' . http_build_query($params) . '#catalogo';
+};
+
 $page_title = 'Catálogo Digital | Brenan Boutique';
 include __DIR__ . '/includes/header.php';
 ?>
 
-<header class="hero">
+<header class="hero compact-hero">
   <div class="wrap">
     <nav class="topbar">
       <a class="brand" href="<?= BASE_URL ?>/index.php" aria-label="Brenan Boutique">
@@ -57,28 +92,21 @@ include __DIR__ . '/includes/header.php';
       </a>
 
       <div class="top-actions">
-        <a class="btn" href="#catalogo">Ver catálogo</a>
+        <a class="btn primary" href="#catalogo">Explorar catálogo</a>
         <?php if (is_logged_in()): ?>
-          <a class="btn primary" href="<?= BASE_URL ?>/admin/index.php">Panel administrativo</a>
+          <a class="btn" href="<?= BASE_URL ?>/admin/index.php">Administrar</a>
         <?php endif; ?>
       </div>
     </nav>
 
-    <section class="hero-card">
+    <section class="hero-card hero-card-compact">
       <div>
-        <span class="eyebrow">✦ Colección disponible</span>
+        <span class="eyebrow">✦ Brenan Boutique</span>
         <h1>Prendas seleccionadas para hacer especial cada momento.</h1>
-        <p>Consulta prendas por categoría, talla, precio y disponibilidad. Las fotografías se ajustan al catálogo sin deformarse y cada tarjeta muestra claramente la talla y el precio.</p>
-
-        <div class="hero-buttons">
-          <a class="btn primary" href="#catalogo">Explorar prendas</a>
-          <?php if (is_logged_in()): ?>
-            <a class="btn" href="<?= BASE_URL ?>/admin/index.php">Entrar al panel</a>
-          <?php endif; ?>
-        </div>
+        <p>Busca por nombre o entra directamente a una categoría. Los filtros adicionales permanecen disponibles sin ocupar espacio en pantalla.</p>
       </div>
 
-      <div class="stats">
+      <div class="stats compact-stats" aria-label="Resumen del catálogo">
         <div class="stat"><strong><?= $availableCount ?></strong><span>Disponibles</span></div>
         <div class="stat"><strong><?= $soldCount ?></strong><span>Vendidos</span></div>
         <div class="stat"><strong><?= $categoryCount ?></strong><span>Categorías</span></div>
@@ -87,82 +115,146 @@ include __DIR__ . '/includes/header.php';
   </div>
 </header>
 
-<section class="toolbar" id="catalogo">
+<section class="catalog-controls" id="catalogo">
   <div class="wrap">
-    <button class="btn primary block mobile-filter-toggle" type="button" data-toggle-filters>☰ Mostrar filtros</button>
+    <div class="category-browser">
+      <div class="category-browser-head">
+        <div>
+          <span class="catalog-kicker">Explorar por categoría</span>
+          <h2>¿Qué tipo de prenda buscas?</h2>
+        </div>
+        <?php if ($filters['category'] !== 'all' || $filters['q'] !== '' || $advancedFiltersActive || $filters['status'] !== 'available'): ?>
+          <a class="clear-catalog-link" href="<?= BASE_URL ?>/index.php#catalogo">Limpiar selección</a>
+        <?php endif; ?>
+      </div>
 
-    <form class="filters" method="get" action="<?= BASE_URL ?>/index.php" data-filters>
-      <label>
-        <span>Buscar</span>
-        <input type="search" name="q" value="<?= e($filters['q']) ?>" placeholder="Nombre, categoría o talla...">
-      </label>
+      <nav class="category-chips" aria-label="Categorías de ropa" data-category-chips>
+        <a
+          class="category-chip <?= $filters['category'] === 'all' ? 'is-active' : '' ?>"
+          href="<?= e($catalogUrl(['category' => 'all'], ['size', 'min_price', 'max_price', 'sold_date'])) ?>"
+          <?= $filters['category'] === 'all' ? 'aria-current="page"' : '' ?>
+        >
+          <span>Todas</span>
+          <strong><?= $visibleCategoryTotal ?></strong>
+        </a>
+        <?php foreach ($categories as $category): ?>
+          <?php $count = $categoryCounts[$category] ?? 0; ?>
+          <a
+            class="category-chip <?= $filters['category'] === $category ? 'is-active' : '' ?> <?= $count === 0 ? 'is-empty' : '' ?>"
+            href="<?= e($catalogUrl(['category' => $category], ['size', 'min_price', 'max_price', 'sold_date'])) ?>"
+            <?= $filters['category'] === $category ? 'aria-current="page"' : '' ?>
+          >
+            <span><?= e($category) ?></span>
+            <strong><?= $count ?></strong>
+          </a>
+        <?php endforeach; ?>
+      </nav>
+    </div>
 
+    <div class="search-panel">
+      <form class="catalog-search-form" method="get" action="<?= BASE_URL ?>/index.php" data-catalog-search>
+        <input type="hidden" name="category" value="<?= e($filters['category']) ?>">
+        <input type="hidden" name="status" value="<?= e($filters['status']) ?>">
 
+        <label class="main-search-field">
+          <span class="sr-only">Buscar prendas</span>
+          <span class="search-symbol" aria-hidden="true">⌕</span>
+          <input
+            type="search"
+            name="q"
+            value="<?= e($filters['q']) ?>"
+            placeholder="Buscar por nombre, categoría o talla"
+            autocomplete="off"
+          >
+        </label>
+        <button class="btn primary search-submit" type="submit">Buscar</button>
 
-      <label>
-        <span>Categoría</span>
-        <select name="category">
-          <option value="all">Todas</option>
-          <?php foreach ($categories as $category): ?>
-            <option value="<?= e($category) ?>" <?= selected($filters['category'], $category) ?>><?= e($category) ?></option>
-          <?php endforeach; ?>
-        </select>
-      </label>
+        <details class="advanced-filter-panel" <?= $advancedFiltersActive ? 'open' : '' ?>>
+          <summary>
+            <span>Filtros adicionales</span>
+            <?php if ($advancedFiltersActive): ?><span class="active-filter-dot">Activos</span><?php endif; ?>
+          </summary>
 
-      <label>
-        <span>Talla</span>
-        <select name="size">
-          <option value="all">Todas</option>
-          <?php foreach ($sizes as $size): ?>
-            <option value="<?= e($size) ?>" <?= selected($filters['size'], $size) ?>><?= e($size) ?></option>
-          <?php endforeach; ?>
-        </select>
-      </label>
+          <div class="advanced-filter-grid">
+            <label>
+              <span>Talla</span>
+              <select name="size">
+                <option value="all">Todas</option>
+                <?php foreach ($sizes as $size): ?>
+                  <option value="<?= e($size) ?>" <?= selected($filters['size'], $size) ?>><?= e($size) ?></option>
+                <?php endforeach; ?>
+              </select>
+            </label>
 
-      <label>
-        <span>Disponibilidad</span>
-        <select name="status">
-          <option value="available" <?= selected($filters['status'], 'available') ?>>Disponibles</option>
-          <option value="all" <?= selected($filters['status'], 'all') ?>>Todos</option>
-          <option value="sold" <?= selected($filters['status'], 'sold') ?>>Vendidos</option>
-        </select>
-      </label>
+            <label>
+              <span>Precio mínimo</span>
+              <input type="number" name="min_price" min="0" value="<?= e($filters['min_price']) ?>" placeholder="$0">
+            </label>
 
-      <label>
-        <span>Precio mín.</span>
-        <input type="number" name="min_price" min="0" value="<?= e($filters['min_price']) ?>" placeholder="$0">
-      </label>
+            <label>
+              <span>Precio máximo</span>
+              <input type="number" name="max_price" min="0" value="<?= e($filters['max_price']) ?>" placeholder="$9999">
+            </label>
 
-      <label>
-        <span>Precio máx.</span>
-        <input type="number" name="max_price" min="0" value="<?= e($filters['max_price']) ?>" placeholder="$9999">
-      </label>
+            <label>
+              <span>Fecha de venta</span>
+              <input type="date" name="sold_date" value="<?= e($filters['sold_date']) ?>">
+            </label>
 
-      <label>
-        <span>Fecha venta</span>
-        <input type="date" name="sold_date" value="<?= e($filters['sold_date']) ?>">
-      </label>
+            <label>
+              <span>Ordenar</span>
+              <select name="sort">
+                <option value="newest" <?= selected($filters['sort'], 'newest') ?>>Más recientes</option>
+                <option value="price-asc" <?= selected($filters['sort'], 'price-asc') ?>>Menor precio</option>
+                <option value="price-desc" <?= selected($filters['sort'], 'price-desc') ?>>Mayor precio</option>
+                <option value="size" <?= selected($filters['sort'], 'size') ?>>Por talla</option>
+                <option value="category" <?= selected($filters['sort'], 'category') ?>>Por categoría</option>
+                <option value="sold-date" <?= selected($filters['sort'], 'sold-date') ?>>Fecha de venta</option>
+              </select>
+            </label>
 
-      <label>
-        <span>Ordenar</span>
-        <select name="sort">
-          <option value="newest" <?= selected($filters['sort'], 'newest') ?>>Más recientes</option>
-          <option value="price-asc" <?= selected($filters['sort'], 'price-asc') ?>>Menor precio</option>
-          <option value="price-desc" <?= selected($filters['sort'], 'price-desc') ?>>Mayor precio</option>
-          <option value="size" <?= selected($filters['sort'], 'size') ?>>Por talla</option>
-          <option value="category" <?= selected($filters['sort'], 'category') ?>>Por categoría</option>
-          <option value="sold-date" <?= selected($filters['sort'], 'sold-date') ?>>Fecha de venta</option>
-        </select>
-      </label>
+            <div class="advanced-filter-actions">
+              <button class="btn primary" type="submit">Aplicar filtros</button>
+              <a class="btn" href="<?= e($catalogUrl([], ['size', 'min_price', 'max_price', 'sold_date', 'sort'])) ?>">Restablecer</a>
+            </div>
+          </div>
+        </details>
+      </form>
 
-      <button class="btn primary" type="submit">Aplicar</button>
-      <a class="btn" href="<?= BASE_URL ?>/index.php#catalogo">Limpiar</a>
-    </form>
+      <nav class="status-tabs" aria-label="Disponibilidad">
+        <a class="status-tab <?= $filters['status'] === 'available' ? 'is-active' : '' ?>" href="<?= e($catalogUrl(['status' => 'available'], ['sold_date'])) ?>">
+          Disponibles <strong><?= $availableCount ?></strong>
+        </a>
+        <a class="status-tab <?= $filters['status'] === 'all' ? 'is-active' : '' ?>" href="<?= e($catalogUrl(['status' => 'all'], ['sold_date'])) ?>">
+          Todas <strong><?= $availableCount + $soldCount ?></strong>
+        </a>
+        <a class="status-tab <?= $filters['status'] === 'sold' ? 'is-active' : '' ?>" href="<?= e($catalogUrl(['status' => 'sold'])) ?>">
+          Vendidas <strong><?= $soldCount ?></strong>
+        </a>
+      </nav>
+    </div>
   </div>
 </section>
 
 <?php $catalogImageIndex = 0; ?>
 <main class="wrap catalog">
+  <div class="catalog-summary" aria-live="polite">
+    <div>
+      <strong><?= count($dresses) ?></strong>
+      <span>prenda<?= count($dresses) === 1 ? '' : 's' ?> encontrada<?= count($dresses) === 1 ? '' : 's' ?></span>
+    </div>
+    <div class="catalog-summary-copy">
+      <?php if ($filters['category'] !== 'all'): ?>
+        Categoría: <strong><?= e($filters['category']) ?></strong>
+      <?php else: ?>
+        Todas las categorías
+      <?php endif; ?>
+      <?php if ($filters['q'] !== ''): ?>
+        · Búsqueda: <strong><?= e($filters['q']) ?></strong>
+      <?php endif; ?>
+    </div>
+  </div>
+
   <?php if (!$dresses): ?>
     <div class="empty">
       <h2>No hay prendas con esos filtros</h2>
