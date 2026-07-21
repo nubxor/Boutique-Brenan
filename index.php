@@ -14,31 +14,20 @@ $filters = [
     'q' => trim((string)($_GET['q'] ?? '')),
     'category' => (string)($_GET['category'] ?? 'all'),
     'size' => (string)($_GET['size'] ?? 'all'),
-    'status' => (string)($_GET['status'] ?? 'available'),
     'min_price' => trim((string)($_GET['min_price'] ?? '')),
     'max_price' => trim((string)($_GET['max_price'] ?? '')),
-    'sold_date' => trim((string)($_GET['sold_date'] ?? '')),
     'sort' => (string)($_GET['sort'] ?? 'newest'),
 ];
 
-$allowedStatus = ['available', 'sold', 'all'];
-if (!in_array($filters['status'], $allowedStatus, true)) {
-    $filters['status'] = 'available';
-}
+$filters['status'] = 'available';
 
 $dresses = build_public_query($pdo, $filters);
 
 $availableCount = (int)$pdo->query("SELECT COUNT(*) FROM dresses WHERE status='available'")->fetchColumn();
-$soldCount = (int)$pdo->query("SELECT COUNT(*) FROM dresses WHERE status='sold'")->fetchColumn();
 $categoryCount = (int)$pdo->query("SELECT COUNT(DISTINCT category) FROM dresses WHERE category <> ''")->fetchColumn();
 
-$categoryCountSql = "SELECT category, COUNT(*) AS total FROM dresses";
+$categoryCountSql = "SELECT category, COUNT(*) AS total FROM dresses WHERE status = 'available' GROUP BY category ORDER BY category ASC";
 $categoryCountParams = [];
-if ($filters['status'] !== 'all') {
-    $categoryCountSql .= " WHERE status = :status";
-    $categoryCountParams['status'] = $filters['status'];
-}
-$categoryCountSql .= " GROUP BY category ORDER BY category ASC";
 $categoryCountStmt = $pdo->prepare($categoryCountSql);
 $categoryCountStmt->execute($categoryCountParams);
 $categoryCounts = [];
@@ -50,27 +39,21 @@ $visibleCategoryTotal = array_sum($categoryCounts);
 $groups = [];
 foreach ($dresses as $dress) {
     $category = normalize_category((string)($dress['category'] ?? 'Otros'));
-    $group = ($dress['status'] === 'sold' && $filters['status'] === 'all')
-        ? $category . ' · Vendidos'
-        : $category;
-    $groups[$group][] = $dress;
+    $groups[$category][] = $dress;
 }
 
 $advancedFiltersActive =
     $filters['size'] !== 'all' ||
     $filters['min_price'] !== '' ||
     $filters['max_price'] !== '' ||
-    $filters['sold_date'] !== '' ||
     $filters['sort'] !== 'newest';
 
 $showNewArrivals =
     $filters['q'] === '' &&
     $filters['category'] === 'all' &&
     $filters['size'] === 'all' &&
-    $filters['status'] === 'available' &&
     $filters['min_price'] === '' &&
     $filters['max_price'] === '' &&
-    $filters['sold_date'] === '' &&
     $filters['sort'] === 'newest';
 
 $newArrivals = $showNewArrivals ? array_slice($dresses, 0, 6) : [];
@@ -81,7 +64,7 @@ $catalogUrl = static function (array $changes = [], array $remove = []) use ($fi
         unset($params[$key]);
     }
     foreach ($params as $key => $value) {
-        if ($value === '' || ($value === 'all' && in_array($key, ['size'], true))) {
+        if ($value === '' || ($value === 'all' && in_array($key, ['size', 'category'], true))) {
             unset($params[$key]);
         }
     }
@@ -96,8 +79,8 @@ include __DIR__ . '/includes/header.php';
   <div class="wrap">
     <nav class="topbar">
       <a class="brand" href="<?= BASE_URL ?>/index.php" aria-label="Brenan Boutique">
-        <span class="logo">BB</span>
-        <span>
+        <img class="brand-mark" src="<?= BASE_URL ?>/assets/img/logo-brennan-boutique.png" alt="Brenan Boutique">
+        <span class="brand-copy">
           <strong>Brenan Boutique</strong>
           <small>Catálogo digital de prendas</small>
         </span>
@@ -120,7 +103,6 @@ include __DIR__ . '/includes/header.php';
 
       <div class="stats compact-stats" aria-label="Resumen del catálogo">
         <div class="stat"><strong><?= $availableCount ?></strong><span>Disponibles</span></div>
-        <div class="stat"><strong><?= $soldCount ?></strong><span>Vendidos</span></div>
         <div class="stat"><strong><?= $categoryCount ?></strong><span>Categorías</span></div>
       </div>
     </section>
@@ -135,7 +117,7 @@ include __DIR__ . '/includes/header.php';
           <span class="catalog-kicker">Explorar por categoría</span>
           <h2>¿Qué tipo de prenda buscas?</h2>
         </div>
-        <?php if ($filters['category'] !== 'all' || $filters['q'] !== '' || $advancedFiltersActive || $filters['status'] !== 'available'): ?>
+        <?php if ($filters['category'] !== 'all' || $filters['q'] !== '' || $advancedFiltersActive): ?>
           <a class="clear-catalog-link" href="<?= BASE_URL ?>/index.php#catalogo">Limpiar selección</a>
         <?php endif; ?>
       </div>
@@ -143,7 +125,7 @@ include __DIR__ . '/includes/header.php';
       <nav class="category-chips" aria-label="Categorías de ropa" data-category-chips>
         <a
           class="category-chip <?= $filters['category'] === 'all' ? 'is-active' : '' ?>"
-          href="<?= e($catalogUrl(['category' => 'all'], ['size', 'min_price', 'max_price', 'sold_date'])) ?>"
+          href="<?= e($catalogUrl(['category' => 'all'], ['size', 'min_price', 'max_price'])) ?>"
           <?= $filters['category'] === 'all' ? 'aria-current="page"' : '' ?>
         >
           <span>Todas</span>
@@ -153,7 +135,7 @@ include __DIR__ . '/includes/header.php';
           <?php $count = $categoryCounts[$category] ?? 0; ?>
           <a
             class="category-chip <?= $filters['category'] === $category ? 'is-active' : '' ?> <?= $count === 0 ? 'is-empty' : '' ?>"
-            href="<?= e($catalogUrl(['category' => $category], ['size', 'min_price', 'max_price', 'sold_date'])) ?>"
+            href="<?= e($catalogUrl(['category' => $category], ['size', 'min_price', 'max_price'])) ?>"
             <?= $filters['category'] === $category ? 'aria-current="page"' : '' ?>
           >
             <span><?= e($category) ?></span>
@@ -166,7 +148,6 @@ include __DIR__ . '/includes/header.php';
     <div class="search-panel">
       <form class="catalog-search-form" method="get" action="<?= BASE_URL ?>/index.php" data-catalog-search>
         <input type="hidden" name="category" value="<?= e($filters['category']) ?>">
-        <input type="hidden" name="status" value="<?= e($filters['status']) ?>">
 
         <label class="main-search-field">
           <span class="sr-only">Buscar prendas</span>
@@ -210,11 +191,6 @@ include __DIR__ . '/includes/header.php';
             </label>
 
             <label>
-              <span>Fecha de venta</span>
-              <input type="date" name="sold_date" value="<?= e($filters['sold_date']) ?>">
-            </label>
-
-            <label>
               <span>Ordenar</span>
               <select name="sort">
                 <option value="newest" <?= selected($filters['sort'], 'newest') ?>>Más recientes</option>
@@ -222,29 +198,16 @@ include __DIR__ . '/includes/header.php';
                 <option value="price-desc" <?= selected($filters['sort'], 'price-desc') ?>>Mayor precio</option>
                 <option value="size" <?= selected($filters['sort'], 'size') ?>>Por talla</option>
                 <option value="category" <?= selected($filters['sort'], 'category') ?>>Por categoría</option>
-                <option value="sold-date" <?= selected($filters['sort'], 'sold-date') ?>>Fecha de venta</option>
               </select>
             </label>
 
             <div class="advanced-filter-actions">
               <button class="btn primary" type="submit">Aplicar filtros</button>
-              <a class="btn" href="<?= e($catalogUrl([], ['size', 'min_price', 'max_price', 'sold_date', 'sort'])) ?>">Restablecer</a>
+              <a class="btn" href="<?= e($catalogUrl([], ['size', 'min_price', 'max_price', 'sort'])) ?>">Restablecer</a>
             </div>
           </div>
         </details>
       </form>
-
-      <nav class="status-tabs" aria-label="Disponibilidad">
-        <a class="status-tab <?= $filters['status'] === 'available' ? 'is-active' : '' ?>" href="<?= e($catalogUrl(['status' => 'available'], ['sold_date'])) ?>">
-          Disponibles <strong><?= $availableCount ?></strong>
-        </a>
-        <a class="status-tab <?= $filters['status'] === 'all' ? 'is-active' : '' ?>" href="<?= e($catalogUrl(['status' => 'all'], ['sold_date'])) ?>">
-          Todas <strong><?= $availableCount + $soldCount ?></strong>
-        </a>
-        <a class="status-tab <?= $filters['status'] === 'sold' ? 'is-active' : '' ?>" href="<?= e($catalogUrl(['status' => 'sold'])) ?>">
-          Vendidas <strong><?= $soldCount ?></strong>
-        </a>
-      </nav>
     </div>
   </div>
 </section>
@@ -323,7 +286,7 @@ include __DIR__ . '/includes/header.php';
 
   <div class="favorites-mode-banner" data-favorites-banner hidden>
     <span>Mostrando tus prendas favoritas guardadas en este dispositivo.</span>
-    <a class="btn small" href="<?= BASE_URL ?>/index.php?status=all#catalogo">Ver todas</a>
+    <a class="btn small" href="<?= BASE_URL ?>/index.php#catalogo">Ver todas</a>
   </div>
 
   <div class="favorites-empty" data-favorites-empty hidden>
@@ -346,7 +309,7 @@ include __DIR__ . '/includes/header.php';
           <h2><?= e($title) ?></h2>
           <p><?= count($items) ?> prenda<?= count($items) === 1 ? '' : 's' ?> encontrada<?= count($items) === 1 ? '' : 's' ?></p>
         </div>
-        <span class="pill"><?= str_contains($title, 'Vendidos') ? 'Historial' : 'Categoría' ?></span>
+        <span class="pill"><?= 'Categoría' ?></span>
       </div>
 
       <div class="grid">
@@ -354,14 +317,11 @@ include __DIR__ . '/includes/header.php';
           <?php $productUrl = BASE_URL . '/product.php?id=' . (int)$dress['id']; ?>
           <article
             id="prenda-<?= (int)$dress['id'] ?>"
-            class="dress-card <?= $dress['status'] === 'sold' ? 'is-sold' : '' ?>"
+            class="dress-card"
             data-product-card
             data-favorite-item="<?= (int)$dress['id'] ?>"
             data-product-category="<?= e((string)$dress['category']) ?>"
           >
-            <?php if ($dress['status'] === 'sold'): ?>
-              <div class="sold-ribbon">Vendido</div>
-            <?php endif; ?>
 
             <button
               class="favorite-button"
@@ -429,10 +389,7 @@ include __DIR__ . '/includes/header.php';
               <h3><a class="product-name-link" href="<?= e($productUrl) ?>"><?= e($dress['name']) ?></a></h3>
               <div class="meta">
                 <span class="badge category"><?= e((string)$dress['category']) ?></span>
-                <span class="badge <?= $dress['status'] === 'sold' ? 'sold' : 'available' ?>"><?= status_label($dress['status']) ?></span>
-                <?php if ($dress['status'] === 'sold' && !empty($dress['sold_date'])): ?>
-                  <span class="badge">Venta: <?= e($dress['sold_date']) ?></span>
-                <?php endif; ?>
+                <span class="badge available">Disponible</span>
               </div>
 
               <div class="card-actions">
@@ -447,7 +404,7 @@ include __DIR__ . '/includes/header.php';
                   data-product-category="<?= e((string)$dress['category']) ?>"
                   data-product-size="<?= e((string)$dress['size']) ?>"
                   data-product-price="<?= e(money_mx($dress['price'])) ?>"
-                  data-product-status="<?= e(status_label($dress['status'])) ?>"
+                  data-product-status="Disponible"
                   aria-label="Compartir <?= e($dress['name']) ?>"
                 >
                   <span class="share-icon" aria-hidden="true">↗</span>
@@ -472,7 +429,7 @@ include __DIR__ . '/includes/header.php';
   <button type="button" class="mobile-nav-item" data-focus-search>
     <span aria-hidden="true">⌕</span><small>Buscar</small>
   </button>
-  <a href="<?= BASE_URL ?>/index.php?status=all&amp;view=favorites#catalogo" class="mobile-nav-item" data-favorites-link>
+  <a href="<?= BASE_URL ?>/index.php?view=favorites#catalogo" class="mobile-nav-item" data-favorites-link>
     <span aria-hidden="true">♡</span><small>Favoritos</small><b data-favorites-count>0</b>
   </a>
 </nav>

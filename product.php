@@ -43,10 +43,13 @@ if (!$dress) {
     <header class="product-header">
       <div class="wrap">
         <nav class="topbar">
-          <a class="brand" href="<?= BASE_URL ?>/index.php" aria-label="Brenan Boutique">
-            <span class="logo">BB</span>
-            <span><strong>Brenan Boutique</strong><small>Catálogo digital de prendas</small></span>
-          </a>
+      <a class="brand" href="<?= BASE_URL ?>/index.php" aria-label="Brenan Boutique">
+        <img class="brand-mark" src="<?= BASE_URL ?>/assets/img/logo-brennan-boutique.png" alt="Brenan Boutique">
+        <span class="brand-copy">
+          <strong>Brenan Boutique</strong>
+          <small>Catálogo digital de prendas</small>
+        </span>
+      </a>
           <div class="top-actions"><a class="btn" href="<?= BASE_URL ?>/index.php#catalogo">Volver al catálogo</a></div>
         </nav>
       </div>
@@ -104,8 +107,8 @@ include __DIR__ . '/includes/header.php';
   <div class="wrap">
     <nav class="topbar">
       <a class="brand" href="<?= BASE_URL ?>/index.php" aria-label="Brenan Boutique">
-        <span class="logo">BB</span>
-        <span>
+        <img class="brand-mark" src="<?= BASE_URL ?>/assets/img/logo-brennan-boutique.png" alt="Brenan Boutique">
+        <span class="brand-copy">
           <strong>Brenan Boutique</strong>
           <small>Catálogo digital de prendas</small>
         </span>
@@ -125,7 +128,7 @@ include __DIR__ . '/includes/header.php';
   <nav class="product-breadcrumb" aria-label="Ruta de navegación">
     <a href="<?= BASE_URL ?>/index.php">Inicio</a>
     <span aria-hidden="true">›</span>
-    <a href="<?= BASE_URL ?>/index.php?category=<?= rawurlencode($category) ?>&status=all#catalogo"><?= e($category) ?></a>
+    <a href="<?= BASE_URL ?>/index.php?category=<?= rawurlencode($category) ?>#catalogo"><?= e($category) ?></a>
     <span aria-hidden="true">›</span>
     <span><?= e((string)$dress['name']) ?></span>
   </nav>
@@ -224,7 +227,7 @@ include __DIR__ . '/includes/header.php';
           aria-label="Compartir <?= e((string)$dress['name']) ?>"
         ><span class="share-icon" aria-hidden="true">↗</span><span>Compartir prenda</span></button>
 
-        <a class="btn" href="<?= BASE_URL ?>/index.php?category=<?= rawurlencode($category) ?>&status=all#catalogo">Ver más de <?= e($category) ?></a>
+        <a class="btn" href="<?= BASE_URL ?>/index.php?category=<?= rawurlencode($category) ?>#catalogo">Ver más de <?= e($category) ?></a>
       </div>
     </section>
   </article>
@@ -269,7 +272,7 @@ include __DIR__ . '/includes/header.php';
   <a href="<?= BASE_URL ?>/index.php#catalogo" class="mobile-nav-item">
     <span aria-hidden="true">←</span><small>Catálogo</small>
   </a>
-  <a href="<?= BASE_URL ?>/index.php?category=<?= rawurlencode($category) ?>&amp;status=all#catalogo" class="mobile-nav-item">
+  <a href="<?= BASE_URL ?>/index.php?category=<?= rawurlencode($category) ?>#catalogo" class="mobile-nav-item">
     <span aria-hidden="true">▦</span><small>Categoría</small>
   </a>
   <button

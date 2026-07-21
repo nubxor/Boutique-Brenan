@@ -101,6 +101,23 @@ a{color:inherit}
   color:var(--muted);
 }
 
+
+.brand-mark{
+  width:74px;
+  height:74px;
+  display:block;
+  object-fit:contain;
+  border-radius:20px;
+  box-shadow:0 14px 32px rgba(133,79,101,.12);
+  background:#ede6e0;
+  flex:0 0 auto;
+}
+
+.brand-copy{
+  display:block;
+  min-width:0;
+}
+
 .top-actions,
 .hero-buttons,
 .actions,
@@ -2097,5 +2114,179 @@ body.favorites-view .catalog-summary-copy::after{
   .favorites-mode-banner{
     align-items:flex-start;
     flex-direction:column;
+  }
+}
+
+
+/* V15 | Logo oficial, sin apartado de vendidos y mejor acomodo móvil */
+.compact-stats{
+  grid-template-columns:repeat(2, minmax(0,1fr));
+}
+
+.compact-stats .stat:last-child{
+  background:linear-gradient(180deg, #fffafb, #fff5f8);
+}
+
+.category-browser,
+.search-panel,
+.catalog-summary,
+.favorites-mode-banner,
+.favorites-empty,
+.size-section,
+.product-detail,
+.related-products{
+  overflow:hidden;
+}
+
+@media (max-width:760px){
+  .brand{
+    gap:10px;
+    align-items:center;
+  }
+
+  .brand-mark{
+    width:58px;
+    height:58px;
+    border-radius:16px;
+  }
+
+  .brand-copy strong{
+    font-size:1.28rem;
+    line-height:1.05;
+  }
+
+  .brand-copy small{
+    margin-top:4px;
+    font-size:.77rem;
+  }
+
+  .compact-stats{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .category-browser-head{
+    flex-direction:column;
+    gap:6px;
+  }
+
+  .search-panel,
+  .catalog-search-form{
+    grid-template-columns:1fr;
+  }
+
+  .search-submit,
+  .advanced-filter-actions .btn{
+    width:100%;
+  }
+
+  .advanced-filter-grid{
+    grid-template-columns:1fr;
+  }
+
+  .grid{
+    grid-template-columns:repeat(2, minmax(0,1fr));
+    gap:12px;
+  }
+
+  .photo{
+    aspect-ratio:4/5.2;
+  }
+
+  .card-bar{
+    left:8px;
+    right:8px;
+    bottom:8px;
+    padding:10px 11px;
+    border-radius:16px;
+    font-size:.82rem;
+  }
+
+  .dress-info h3{
+    font-size:.98rem;
+    line-height:1.2;
+  }
+
+  .card-actions{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:8px;
+  }
+
+  .card-actions .btn{
+    width:100%;
+  }
+
+  .new-arrivals-strip{
+    grid-auto-columns:minmax(152px, 70vw);
+  }
+
+  .mobile-bottom-nav{
+    left:8px;
+    right:8px;
+    border-radius:18px;
+  }
+}
+
+@media (max-width:520px){
+  .wrap{
+    width:min(100% - 18px, 1180px);
+  }
+
+  .hero-card-compact{
+    padding:16px;
+  }
+
+  .eyebrow{
+    font-size:.74rem;
+    padding:7px 10px;
+  }
+
+  .compact-stats .stat{
+    padding:10px 8px;
+  }
+
+  .catalog-summary{
+    padding:10px 12px;
+  }
+
+  .grid{
+    grid-template-columns:repeat(2, minmax(0,1fr));
+    gap:10px;
+  }
+
+  .new-arrival-card,
+  .dress-card{
+    border-radius:20px;
+  }
+
+  .favorite-button{
+    width:36px;
+    height:36px;
+    top:9px;
+    left:9px;
+    font-size:1.15rem;
+  }
+}
+
+@media (max-width:390px){
+  .brand-mark{
+    width:52px;
+    height:52px;
+  }
+
+  .brand-copy strong{
+    font-size:1.12rem;
+  }
+
+  .brand-copy small{
+    font-size:.72rem;
+  }
+
+  .grid{
+    grid-template-columns:1fr;
+  }
+
+  .new-arrivals-strip{
+    grid-auto-columns:minmax(150px, 82vw);
   }
 }

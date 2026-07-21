@@ -7,6 +7,6 @@
 $jsPath = __DIR__ . '/../assets/js/app.js';
 $jsVersion = is_file($jsPath) ? (int)filemtime($jsPath) : 1;
 ?>
-<script defer src="<?= BASE_URL ?>/assets/js/app.js?v=<?= $jsVersion ?>"></script>
+<script src="<?= BASE_URL ?>/assets/js/app.js?v=<?= $jsVersion ?>"></script>
 </body>
 </html>
