@@ -58,6 +58,20 @@ $showNewArrivals =
 
 $newArrivals = $showNewArrivals ? array_slice($dresses, 0, 6) : [];
 
+
+$heroFeature = $newArrivals[0] ?? ($dresses[0] ?? null);
+$heroFeatureImage = '';
+$heroFeatureFallbackJson = '[]';
+$heroFeatureUrl = '';
+if ($heroFeature) {
+    $heroFeatureUrl = BASE_URL . '/product.php?id=' . (int)$heroFeature['id'];
+    if (!empty($heroFeature['image'])) {
+        $heroFeatureImage = image_public_url($heroFeature['image'], 480);
+        $heroFeatureFallbacks = image_fallback_urls($heroFeature['image']);
+        $heroFeatureFallbackJson = json_encode($heroFeatureFallbacks, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: '[]';
+    }
+}
+
 $catalogUrl = static function (array $changes = [], array $remove = []) use ($filters): string {
     $params = array_merge($filters, $changes);
     foreach ($remove as $key) {
@@ -77,7 +91,7 @@ include __DIR__ . '/includes/header.php';
 
 <header class="hero compact-hero">
   <div class="wrap">
-    <nav class="topbar">
+    <nav class="topbar topbar-editorial">
       <a class="brand" href="<?= BASE_URL ?>/index.php" aria-label="Brenan Boutique">
         <img class="brand-mark" src="<?= BASE_URL ?>/assets/img/logo-brennan-boutique-v2.png" alt="Brenan Boutique">
         <span class="brand-copy">
@@ -86,39 +100,66 @@ include __DIR__ . '/includes/header.php';
         </span>
       </a>
 
-      <div class="top-actions">
-        <a class="btn primary" href="#catalogo">Explorar catálogo</a>
+      <div class="top-actions top-actions-editorial">
+        <button type="button" class="icon-action" data-focus-search aria-label="Buscar prendas">
+          <span aria-hidden="true">⌕</span>
+        </button>
+        <a class="icon-action" href="<?= BASE_URL ?>/index.php?view=favorites#catalogo" aria-label="Ver favoritos">
+          <span aria-hidden="true">♡</span>
+        </a>
         <?php if (is_logged_in()): ?>
           <a class="btn" href="<?= BASE_URL ?>/admin/index.php">Administrar</a>
         <?php endif; ?>
       </div>
     </nav>
 
-    <section class="premium-hero" aria-labelledby="premium-hero-title">
-      <div class="premium-hero-copy">
-        <h1 id="premium-hero-title" class="premium-hero-title">
-          <span>Prendas seleccionadas</span>
-          para hacer especial cada momento.
-        </h1>
-        <p class="premium-hero-subtitle">Descubre una selección cuidada de prendas y encuentra fácilmente el estilo ideal para ti.</p>
+    <section class="editorial-hero" aria-labelledby="editorial-hero-title">
+      <div class="editorial-copy">
+        <p class="editorial-overline">Brenan Boutique</p>
+        <h1 id="editorial-hero-title" class="editorial-title">Encuentra algo especial para ti.</h1>
+        <p class="editorial-subtitle">Prendas seleccionadas por Brenan Boutique para ayudarte a descubrir el estilo ideal de forma rápida y bonita.</p>
 
-        <div class="premium-hero-actions">
-          <a class="btn primary" href="#catalogo">Ver catálogo</a>
-          <a class="btn soft" href="#categorias">Explorar categorías</a>
+        <div class="editorial-meta" aria-label="Resumen del catálogo">
+          <span class="editorial-pill"><strong><?= $availableCount ?></strong> disponibles</span>
+          <span class="editorial-pill"><strong><?= $categoryCount ?></strong> categorías</span>
+        </div>
+
+        <div class="editorial-actions">
+          <button class="btn primary" type="button" data-focus-search>Buscar prendas</button>
+          <a class="btn soft" href="#categorias">Ver categorías</a>
         </div>
       </div>
 
-      <div class="premium-metrics" aria-label="Resumen del catálogo">
-        <div class="premium-metric">
-          <strong><?= $availableCount ?></strong>
-          <span>prendas disponibles</span>
-        </div>
-        <span class="premium-metric-divider" aria-hidden="true"></span>
-        <div class="premium-metric">
-          <strong><?= $categoryCount ?></strong>
-          <span>categorías</span>
-        </div>
-      </div>
+      <?php if ($heroFeature): ?>
+        <article class="hero-feature-card">
+          <a class="hero-feature-photo <?= ($heroFeature['image_fit'] ?? '') === 'contain' ? 'contain' : '' ?> <?= $heroFeatureImage !== '' ? 'image-pending' : '' ?>" href="<?= e($heroFeatureUrl) ?>">
+            <?php if ($heroFeatureImage !== ''): ?>
+              <img
+                src="<?= e($heroFeatureImage) ?>"
+                data-image-fallbacks="<?= e($heroFeatureFallbackJson) ?>"
+                alt="<?= e((string)$heroFeature['name']) ?>"
+                loading="eager"
+                fetchpriority="high"
+                decoding="async"
+                width="480"
+                height="648"
+              >
+            <?php else: ?>
+              <span>Sin foto</span>
+            <?php endif; ?>
+          </a>
+
+          <div class="hero-feature-content">
+            <span class="hero-feature-tag">Nuevo ingreso</span>
+            <h2><a href="<?= e($heroFeatureUrl) ?>"><?= e((string)$heroFeature['name']) ?></a></h2>
+            <p><?= e((string)($heroFeature['category'] ?? 'Prenda')) ?> · Talla <?= e((string)$heroFeature['size']) ?></p>
+            <div class="hero-feature-footer">
+              <strong><?= e(money_mx($heroFeature['price'])) ?></strong>
+              <a class="btn soft small" href="<?= e($heroFeatureUrl) ?>">Ver prenda</a>
+            </div>
+          </div>
+        </article>
+      <?php endif; ?>
     </section>
   </div>
 </header>
