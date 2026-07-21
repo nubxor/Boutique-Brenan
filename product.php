@@ -44,7 +44,7 @@ if (!$dress) {
       <div class="wrap">
         <nav class="topbar">
       <a class="brand" href="<?= BASE_URL ?>/index.php" aria-label="Brenan Boutique">
-        <img class="brand-mark" src="<?= BASE_URL ?>/assets/img/logo-brennan-boutique.png" alt="Brenan Boutique">
+        <img class="brand-mark" src="<?= BASE_URL ?>/assets/img/logo-brennan-boutique-v2.png" alt="Brenan Boutique">
         <span class="brand-copy">
           <strong>Brenan Boutique</strong>
           <small>Catálogo digital de prendas</small>
@@ -107,7 +107,7 @@ include __DIR__ . '/includes/header.php';
   <div class="wrap">
     <nav class="topbar">
       <a class="brand" href="<?= BASE_URL ?>/index.php" aria-label="Brenan Boutique">
-        <img class="brand-mark" src="<?= BASE_URL ?>/assets/img/logo-brennan-boutique.png" alt="Brenan Boutique">
+        <img class="brand-mark" src="<?= BASE_URL ?>/assets/img/logo-brennan-boutique-v2.png" alt="Brenan Boutique">
         <span class="brand-copy">
           <strong>Brenan Boutique</strong>
           <small>Catálogo digital de prendas</small>
