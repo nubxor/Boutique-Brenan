@@ -66,8 +66,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const showUnavailableState = function () {
       finished = true;
       image.classList.add('image-load-failed');
-      const holder = image.closest('.photo-zoom, .preview, td');
-      if (holder) holder.classList.add('image-unavailable');
+      const holder = image.closest('.photo-zoom, .preview, td, .photo, .new-arrival-photo, .related-photo, .product-main-photo');
+      if (holder) {
+        holder.classList.add('image-unavailable');
+        holder.classList.remove('image-pending');
+      }
     };
 
     const tryNext = function () {
@@ -91,8 +94,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     image.addEventListener('load', function () {
       image.classList.remove('image-load-failed');
-      const holder = image.closest('.photo-zoom, .preview, td');
-      if (holder) holder.classList.remove('image-unavailable');
+      image.classList.add('is-image-ready');
+      const holder = image.closest('.photo-zoom, .preview, td, .photo, .new-arrival-photo, .related-photo, .product-main-photo');
+      if (holder) {
+        holder.classList.remove('image-unavailable');
+        holder.classList.remove('image-pending');
+        holder.classList.add('is-image-ready');
+      }
     });
 
     image.addEventListener('error', tryNext);
@@ -103,6 +111,26 @@ document.addEventListener('DOMContentLoaded', function () {
   };
 
   document.querySelectorAll('img[data-image-fallbacks]').forEach(installImageFallback);
+
+  document.querySelectorAll('.image-pending img').forEach(function (image) {
+    if (image.complete && image.naturalWidth > 0) {
+      image.classList.add('is-image-ready');
+      const holder = image.closest('.image-pending');
+      if (holder) {
+        holder.classList.remove('image-pending');
+        holder.classList.add('is-image-ready');
+      }
+    }
+  });
+
+  document.querySelectorAll('[data-focus-search]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      const search = document.querySelector('#busqueda-prendas');
+      if (!search) return;
+      search.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      window.setTimeout(function () { search.focus({ preventScroll: true }); }, 350);
+    });
+  });
 
   const fileInput = document.querySelector('input[type="file"][name="image"]');
   const preview = document.querySelector('.preview');
@@ -510,6 +538,107 @@ document.addEventListener('DOMContentLoaded', function () {
       resizeTimer = window.setTimeout(fitImageToScreen, 120);
     });
   }
+
+  // Favoritos locales: no requiere cuenta y no guarda información personal.
+  const favoriteButtons = document.querySelectorAll('[data-favorite-toggle]');
+  const favoriteCountLabels = document.querySelectorAll('[data-favorites-count]');
+  const favoritesBanner = document.querySelector('[data-favorites-banner]');
+  const favoritesEmpty = document.querySelector('[data-favorites-empty]');
+  const FAVORITES_KEY = 'brenan_boutique_favorites_v1';
+
+  const readFavorites = function () {
+    try {
+      const stored = JSON.parse(window.localStorage.getItem(FAVORITES_KEY) || '[]');
+      return new Set(Array.isArray(stored) ? stored.map(String) : []);
+    } catch (error) {
+      return new Set();
+    }
+  };
+
+  let favorites = readFavorites();
+
+  const saveFavorites = function () {
+    try {
+      window.localStorage.setItem(FAVORITES_KEY, JSON.stringify(Array.from(favorites)));
+    } catch (error) {
+      // El catálogo continúa funcionando aunque el navegador bloquee el almacenamiento local.
+    }
+  };
+
+  const updateFavoriteButton = function (button) {
+    const id = String(button.dataset.productId || '');
+    const selected = id !== '' && favorites.has(id);
+    button.setAttribute('aria-pressed', selected ? 'true' : 'false');
+    button.classList.toggle('is-favorite', selected);
+
+    const icon = button.querySelector('span[aria-hidden="true"]');
+    if (icon) icon.textContent = selected ? '♥' : '♡';
+
+    const label = button.querySelector('[data-favorite-label]');
+    if (label) label.textContent = selected ? 'Guardada en favoritos' : 'Guardar en favoritos';
+
+    const name = button.dataset.productName || 'esta prenda';
+    button.setAttribute(
+      'aria-label',
+      selected ? 'Quitar ' + name + ' de favoritos' : 'Guardar ' + name + ' en favoritos'
+    );
+  };
+
+  const updateFavoriteUI = function () {
+    favoriteButtons.forEach(updateFavoriteButton);
+    favoriteCountLabels.forEach(function (label) {
+      label.textContent = String(favorites.size);
+      label.hidden = favorites.size === 0;
+    });
+  };
+
+  favoriteButtons.forEach(function (button) {
+    button.addEventListener('click', function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      const id = String(button.dataset.productId || '');
+      if (!id) return;
+
+      if (favorites.has(id)) favorites.delete(id);
+      else favorites.add(id);
+
+      saveFavorites();
+      updateFavoriteUI();
+
+      if (document.body.classList.contains('favorites-view')) {
+        window.setTimeout(applyFavoritesView, 0);
+      }
+    });
+  });
+
+  const applyFavoritesView = function () {
+    const cards = Array.from(document.querySelectorAll('[data-product-card]'));
+    let visible = 0;
+
+    cards.forEach(function (card) {
+      const id = String(card.dataset.favoriteItem || '');
+      const show = favorites.has(id);
+      card.hidden = !show;
+      if (show) visible += 1;
+    });
+
+    document.querySelectorAll('[data-product-section]').forEach(function (section) {
+      section.hidden = !section.querySelector('[data-product-card]:not([hidden])');
+    });
+
+    const newArrivals = document.querySelector('.new-arrivals');
+    if (newArrivals) newArrivals.hidden = true;
+    if (favoritesBanner) favoritesBanner.hidden = false;
+    if (favoritesEmpty) favoritesEmpty.hidden = visible > 0;
+  };
+
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('view') === 'favorites') {
+    document.body.classList.add('favorites-view');
+    applyFavoritesView();
+  }
+
+  updateFavoriteUI();
 
   // Botón para compartir cada prenda.
   const shareButtons = document.querySelectorAll('[data-share-product]');

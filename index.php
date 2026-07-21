@@ -63,6 +63,18 @@ $advancedFiltersActive =
     $filters['sold_date'] !== '' ||
     $filters['sort'] !== 'newest';
 
+$showNewArrivals =
+    $filters['q'] === '' &&
+    $filters['category'] === 'all' &&
+    $filters['size'] === 'all' &&
+    $filters['status'] === 'available' &&
+    $filters['min_price'] === '' &&
+    $filters['max_price'] === '' &&
+    $filters['sold_date'] === '' &&
+    $filters['sort'] === 'newest';
+
+$newArrivals = $showNewArrivals ? array_slice($dresses, 0, 6) : [];
+
 $catalogUrl = static function (array $changes = [], array $remove = []) use ($filters): string {
     $params = array_merge($filters, $changes);
     foreach ($remove as $key) {
@@ -117,7 +129,7 @@ include __DIR__ . '/includes/header.php';
 
 <section class="catalog-controls" id="catalogo">
   <div class="wrap">
-    <div class="category-browser">
+    <div class="category-browser" id="categorias">
       <div class="category-browser-head">
         <div>
           <span class="catalog-kicker">Explorar por categoría</span>
@@ -160,6 +172,7 @@ include __DIR__ . '/includes/header.php';
           <span class="sr-only">Buscar prendas</span>
           <span class="search-symbol" aria-hidden="true">⌕</span>
           <input
+            id="busqueda-prendas"
             type="search"
             name="q"
             value="<?= e($filters['q']) ?>"
@@ -237,6 +250,59 @@ include __DIR__ . '/includes/header.php';
 </section>
 
 <?php $catalogImageIndex = 0; ?>
+<?php if ($newArrivals): ?>
+<section class="new-arrivals wrap" aria-labelledby="new-arrivals-title">
+  <div class="new-arrivals-head">
+    <div>
+      <span class="catalog-kicker">Recién agregadas</span>
+      <h2 id="new-arrivals-title">Nuevos ingresos</h2>
+    </div>
+    <a href="#catalogo" class="clear-catalog-link">Ver todo el catálogo</a>
+  </div>
+
+  <div class="new-arrivals-strip" aria-label="Nuevos ingresos">
+    <?php foreach ($newArrivals as $newDress): ?>
+      <?php
+        $newProductUrl = BASE_URL . '/product.php?id=' . (int)$newDress['id'];
+        $newImage = !empty($newDress['image']) ? image_public_url($newDress['image'], 480) : '';
+        $newFallbacks = !empty($newDress['image']) ? image_fallback_urls($newDress['image']) : [];
+        $newFallbackJson = json_encode($newFallbacks, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: '[]';
+      ?>
+      <article class="new-arrival-card" data-favorite-item="<?= (int)$newDress['id'] ?>">
+        <a class="new-arrival-photo <?= $newDress['image_fit'] === 'contain' ? 'contain' : '' ?> <?= $newImage !== '' ? 'image-pending' : '' ?>" href="<?= e($newProductUrl) ?>">
+          <?php if ($newImage !== ''): ?>
+            <img
+              src="<?= e($newImage) ?>"
+              data-image-fallbacks="<?= e($newFallbackJson) ?>"
+              alt="<?= e((string)$newDress['name']) ?>"
+              loading="lazy"
+              decoding="async"
+              width="320"
+              height="432"
+            >
+          <?php else: ?>
+            <span>Sin foto</span>
+          <?php endif; ?>
+        </a>
+        <button
+          class="favorite-button favorite-button-small"
+          type="button"
+          data-favorite-toggle
+          data-product-id="<?= (int)$newDress['id'] ?>"
+          data-product-name="<?= e((string)$newDress['name']) ?>"
+          aria-pressed="false"
+          aria-label="Guardar <?= e((string)$newDress['name']) ?> en favoritos"
+        ><span aria-hidden="true">♡</span></button>
+        <a class="new-arrival-info" href="<?= e($newProductUrl) ?>">
+          <strong><?= e((string)$newDress['name']) ?></strong>
+          <span>Talla <?= e((string)$newDress['size']) ?> · <?= e(money_mx($newDress['price'])) ?></span>
+        </a>
+      </article>
+    <?php endforeach; ?>
+  </div>
+</section>
+<?php endif; ?>
+
 <main class="wrap catalog">
   <div class="catalog-summary" aria-live="polite">
     <div>
@@ -255,6 +321,17 @@ include __DIR__ . '/includes/header.php';
     </div>
   </div>
 
+  <div class="favorites-mode-banner" data-favorites-banner hidden>
+    <span>Mostrando tus prendas favoritas guardadas en este dispositivo.</span>
+    <a class="btn small" href="<?= BASE_URL ?>/index.php?status=all#catalogo">Ver todas</a>
+  </div>
+
+  <div class="favorites-empty" data-favorites-empty hidden>
+    <span class="favorites-empty-icon" aria-hidden="true">♡</span>
+    <h2>Aún no guardas prendas favoritas</h2>
+    <p>Toca el corazón de una prenda para encontrarla rápidamente después.</p>
+  </div>
+
   <?php if (!$dresses): ?>
     <div class="empty">
       <h2>No hay prendas con esos filtros</h2>
@@ -263,7 +340,7 @@ include __DIR__ . '/includes/header.php';
   <?php endif; ?>
 
   <?php foreach ($groups as $title => $items): ?>
-    <section class="size-section">
+    <section class="size-section" data-product-section>
       <div class="section-head">
         <div>
           <h2><?= e($title) ?></h2>
@@ -279,12 +356,24 @@ include __DIR__ . '/includes/header.php';
             id="prenda-<?= (int)$dress['id'] ?>"
             class="dress-card <?= $dress['status'] === 'sold' ? 'is-sold' : '' ?>"
             data-product-card
+            data-favorite-item="<?= (int)$dress['id'] ?>"
+            data-product-category="<?= e((string)$dress['category']) ?>"
           >
             <?php if ($dress['status'] === 'sold'): ?>
               <div class="sold-ribbon">Vendido</div>
             <?php endif; ?>
 
-            <div class="photo <?= $dress['image_fit'] === 'contain' ? 'contain' : '' ?>">
+            <button
+              class="favorite-button"
+              type="button"
+              data-favorite-toggle
+              data-product-id="<?= (int)$dress['id'] ?>"
+              data-product-name="<?= e((string)$dress['name']) ?>"
+              aria-pressed="false"
+              aria-label="Guardar <?= e((string)$dress['name']) ?> en favoritos"
+            ><span aria-hidden="true">♡</span></button>
+
+            <div class="photo <?= $dress['image_fit'] === 'contain' ? 'contain' : '' ?> <?= !empty($dress['image']) ? 'image-pending' : '' ?>">
               <?php if (!empty($dress['image'])): ?>
                 <?php
                   $catalogImageIndex++;
@@ -372,6 +461,21 @@ include __DIR__ . '/includes/header.php';
     </section>
   <?php endforeach; ?>
 </main>
+
+<nav class="mobile-bottom-nav" aria-label="Navegación rápida">
+  <a href="<?= BASE_URL ?>/index.php" class="mobile-nav-item">
+    <span aria-hidden="true">⌂</span><small>Inicio</small>
+  </a>
+  <a href="#categorias" class="mobile-nav-item">
+    <span aria-hidden="true">▦</span><small>Categorías</small>
+  </a>
+  <button type="button" class="mobile-nav-item" data-focus-search>
+    <span aria-hidden="true">⌕</span><small>Buscar</small>
+  </button>
+  <a href="<?= BASE_URL ?>/index.php?status=all&amp;view=favorites#catalogo" class="mobile-nav-item" data-favorites-link>
+    <span aria-hidden="true">♡</span><small>Favoritos</small><b data-favorites-count>0</b>
+  </a>
+</nav>
 
 <div class="lightbox" data-lightbox hidden aria-hidden="true">
   <div class="lightbox-backdrop" data-lightbox-close></div>

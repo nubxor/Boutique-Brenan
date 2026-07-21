@@ -138,7 +138,7 @@ include __DIR__ . '/includes/header.php';
 
       <?php if ($productImageUrl !== ''): ?>
         <button
-          class="product-main-photo photo-zoom <?= $dress['image_fit'] === 'contain' ? 'contain' : '' ?>"
+          class="product-main-photo photo-zoom image-pending <?= $dress['image_fit'] === 'contain' ? 'contain' : '' ?>"
           type="button"
           data-lightbox-src="<?= e(image_public_url($dress['image'])) ?>"
           data-lightbox-fallbacks="<?= e($imageFallbackJson) ?>"
@@ -201,6 +201,16 @@ include __DIR__ . '/includes/header.php';
         <?php endif; ?>
 
         <button
+          class="btn soft favorite-product-button"
+          type="button"
+          data-favorite-toggle
+          data-product-id="<?= (int)$dress['id'] ?>"
+          data-product-name="<?= e((string)$dress['name']) ?>"
+          aria-pressed="false"
+          aria-label="Guardar <?= e((string)$dress['name']) ?> en favoritos"
+        ><span aria-hidden="true">♡</span><span data-favorite-label>Guardar en favoritos</span></button>
+
+        <button
           class="btn soft share-product"
           type="button"
           data-share-product
@@ -237,7 +247,7 @@ include __DIR__ . '/includes/header.php';
             $relatedFallbackJson = json_encode($relatedFallbacks, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: '[]';
           ?>
           <a class="related-card" href="<?= e($relatedUrl) ?>">
-            <div class="related-photo <?= $item['image_fit'] === 'contain' ? 'contain' : '' ?>">
+            <div class="related-photo <?= $item['image_fit'] === 'contain' ? 'contain' : '' ?> <?= $relatedImage !== '' ? 'image-pending' : '' ?>">
               <?php if ($relatedImage !== ''): ?>
                 <img src="<?= e($relatedImage) ?>" data-image-fallbacks="<?= e($relatedFallbackJson) ?>" alt="<?= e((string)$item['name']) ?>" loading="lazy" decoding="async" width="480" height="648">
               <?php else: ?>
@@ -254,6 +264,35 @@ include __DIR__ . '/includes/header.php';
     </section>
   <?php endif; ?>
 </main>
+
+<nav class="mobile-bottom-nav product-mobile-nav" aria-label="Acciones de la prenda">
+  <a href="<?= BASE_URL ?>/index.php#catalogo" class="mobile-nav-item">
+    <span aria-hidden="true">←</span><small>Catálogo</small>
+  </a>
+  <a href="<?= BASE_URL ?>/index.php?category=<?= rawurlencode($category) ?>&amp;status=all#catalogo" class="mobile-nav-item">
+    <span aria-hidden="true">▦</span><small>Categoría</small>
+  </a>
+  <button
+    type="button"
+    class="mobile-nav-item"
+    data-favorite-toggle
+    data-product-id="<?= (int)$dress['id'] ?>"
+    data-product-name="<?= e((string)$dress['name']) ?>"
+    aria-pressed="false"
+  ><span aria-hidden="true">♡</span><small>Favorito</small></button>
+  <button
+    type="button"
+    class="mobile-nav-item"
+    data-share-product
+    data-product-id="<?= (int)$dress['id'] ?>"
+    data-product-url="<?= e($productPath) ?>"
+    data-product-name="<?= e((string)$dress['name']) ?>"
+    data-product-category="<?= e($category) ?>"
+    data-product-size="<?= e((string)$dress['size']) ?>"
+    data-product-price="<?= e(money_mx($dress['price'])) ?>"
+    data-product-status="<?= e(status_label((string)$dress['status'])) ?>"
+  ><span aria-hidden="true">↗</span><small>Compartir</small></button>
+</nav>
 
 <div class="lightbox" data-lightbox hidden aria-hidden="true">
   <div class="lightbox-backdrop" data-lightbox-close></div>

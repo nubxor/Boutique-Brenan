@@ -10,10 +10,13 @@ $canonical_url = isset($canonical_url) ? trim((string)$canonical_url) : '';
 $og_image_url = isset($og_image_url) ? trim((string)$og_image_url) : '';
 $og_type = isset($og_type) ? trim((string)$og_type) : 'website';
 
+header_remove('X-Powered-By');
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: SAMEORIGIN');
 header('Referrer-Policy: strict-origin-when-cross-origin');
-header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+header('Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()');
+header('X-Permitted-Cross-Domain-Policies: none');
+header("Content-Security-Policy: default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; object-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; media-src 'self'; manifest-src 'self'");
 
 $isAdminPage = str_contains((string)($_SERVER['SCRIPT_NAME'] ?? ''), '/admin/');
 $cssPath = __DIR__ . '/../assets/css/styles.css';
