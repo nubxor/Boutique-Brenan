@@ -1,11 +1,11 @@
 <?php
 if (!isset($page_title)) {
-    $page_title = 'Catálogo Digital | Brenan Boutique';
+    $page_title = 'Catálogo Digital | Brennan Boutique';
 }
 
 $page_description = isset($page_description)
     ? trim((string)$page_description)
-    : 'Catálogo digital de prendas Brenan Boutique.';
+    : 'Catálogo digital de prendas Brennan Boutique.';
 $canonical_url = isset($canonical_url) ? trim((string)$canonical_url) : '';
 $og_image_url = isset($og_image_url) ? trim((string)$og_image_url) : '';
 $og_type = isset($og_type) ? trim((string)$og_type) : 'website';
@@ -23,7 +23,7 @@ header("Content-Security-Policy: default-src 'self'; base-uri 'self'; form-actio
 
 $isAdminPage = str_contains((string)($_SERVER['SCRIPT_NAME'] ?? ''), '/admin/');
 $cssPath = __DIR__ . '/../assets/css/styles.css';
-$cssVersion = 'v20-' . (is_file($cssPath) ? (string)filemtime($cssPath) : '1');
+$cssVersion = 'v21-' . (is_file($cssPath) ? (string)filemtime($cssPath) : '1');
 ?>
 <!doctype html>
 <html lang="es">
@@ -38,7 +38,7 @@ $cssVersion = 'v20-' . (is_file($cssPath) ? (string)filemtime($cssPath) : '1');
   <?php endif; ?>
   <meta property="og:locale" content="es_MX">
   <meta property="og:type" content="<?= e($og_type) ?>">
-  <meta property="og:site_name" content="Brenan Boutique">
+  <meta property="og:site_name" content="Brennan Boutique">
   <meta property="og:title" content="<?= e($page_title) ?>">
   <meta property="og:description" content="<?= e($page_description) ?>">
   <?php if ($canonical_url !== ''): ?>

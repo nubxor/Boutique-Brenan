@@ -85,17 +85,17 @@ $catalogUrl = static function (array $changes = [], array $remove = []) use ($fi
     return BASE_URL . '/index.php?' . http_build_query($params) . '#catalogo';
 };
 
-$page_title = 'Catálogo Digital | Brenan Boutique';
+$page_title = 'Catálogo Digital | Brennan Boutique';
 include __DIR__ . '/includes/header.php';
 ?>
 
 <header class="hero compact-hero">
   <div class="wrap">
     <nav class="topbar topbar-editorial">
-      <a class="brand" href="<?= BASE_URL ?>/index.php" aria-label="Brenan Boutique">
-        <img class="brand-mark" src="<?= BASE_URL ?>/assets/img/logo-brennan-boutique-v2.png" alt="Brenan Boutique">
+      <a class="brand" href="<?= BASE_URL ?>/index.php" aria-label="Brennan Boutique">
+        <img class="brand-mark" src="<?= BASE_URL ?>/assets/img/logo-brennan-boutique-v2.png" alt="Brennan Boutique">
         <span class="brand-copy">
-          <strong>Brenan Boutique</strong>
+          <strong>Brennan Boutique</strong>
           <small>Catálogo digital de prendas</small>
         </span>
       </a>
@@ -115,9 +115,12 @@ include __DIR__ . '/includes/header.php';
 
     <section class="editorial-hero" aria-labelledby="editorial-hero-title">
       <div class="editorial-copy">
-        <p class="editorial-overline">Brenan Boutique</p>
-        <h1 id="editorial-hero-title" class="editorial-title">Encuentra algo especial para ti.</h1>
-        <p class="editorial-subtitle">Prendas seleccionadas por Brenan Boutique para ayudarte a descubrir el estilo ideal de forma rápida y bonita.</p>
+        <a class="editorial-brand-lockup" href="<?= BASE_URL ?>/index.php" aria-label="Brennan Boutique">
+          <img src="<?= BASE_URL ?>/assets/img/logo-brennan-boutique-v2.png" alt="Brennan Boutique">
+          <span>Brennan Boutique</span>
+        </a>
+                <h1 id="editorial-hero-title" class="editorial-title">Encuentra algo especial para ti.</h1>
+        <p class="editorial-subtitle">Prendas seleccionadas por Brennan Boutique para ayudarte a descubrir el estilo ideal de forma rápida y bonita.</p>
 
         <div class="editorial-meta" aria-label="Resumen del catálogo">
           <span class="editorial-pill"><strong><?= $availableCount ?></strong> disponibles</span>

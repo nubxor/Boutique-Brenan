@@ -3714,3 +3714,11 @@ body{
     aspect-ratio:4/3;
   }
 }
+
+
+/* BRENNAN BOUTIQUE V21 | Marca integrada en portada */
+.editorial-brand-lockup{display:inline-flex;align-items:center;gap:10px;width:max-content;margin:0 0 14px;color:var(--ink);text-decoration:none}
+.editorial-brand-lockup img{width:48px;height:48px;object-fit:contain;border-radius:14px;background:rgba(255,255,255,.78);padding:4px;box-shadow:0 6px 14px rgba(133,79,101,.07)}
+.editorial-brand-lockup span{font-family:Georgia,"Times New Roman",serif;font-size:1rem;font-weight:700;letter-spacing:.015em}
+@media (max-width:760px){.editorial-brand-lockup{margin-bottom:10px}.editorial-brand-lockup img{width:42px;height:42px;border-radius:12px}.editorial-brand-lockup span{font-size:.92rem}}
+@media (max-width:460px){.editorial-brand-lockup img{width:38px;height:38px}.editorial-brand-lockup span{font-size:.86rem}}
