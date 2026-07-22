@@ -5,7 +5,7 @@
 </footer>
 <?php
 $jsPath = __DIR__ . '/../assets/js/app.js';
-$jsVersion = 'v21-' . (is_file($jsPath) ? (string)filemtime($jsPath) : '1');
+$jsVersion = 'v22-' . (is_file($jsPath) ? (string)filemtime($jsPath) : '1');
 ?>
 <script src="<?= BASE_URL ?>/assets/js/app.js?v=<?= e($jsVersion) ?>"></script>
 </body>

@@ -23,7 +23,7 @@ header("Content-Security-Policy: default-src 'self'; base-uri 'self'; form-actio
 
 $isAdminPage = str_contains((string)($_SERVER['SCRIPT_NAME'] ?? ''), '/admin/');
 $cssPath = __DIR__ . '/../assets/css/styles.css';
-$cssVersion = 'v21-' . (is_file($cssPath) ? (string)filemtime($cssPath) : '1');
+$cssVersion = 'v22-' . (is_file($cssPath) ? (string)filemtime($cssPath) : '1');
 ?>
 <!doctype html>
 <html lang="es">

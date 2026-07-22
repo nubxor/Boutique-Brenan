@@ -3722,3 +3722,24 @@ body{
 .editorial-brand-lockup span{font-family:Georgia,"Times New Roman",serif;font-size:1rem;font-weight:700;letter-spacing:.015em}
 @media (max-width:760px){.editorial-brand-lockup{margin-bottom:10px}.editorial-brand-lockup img{width:42px;height:42px;border-radius:12px}.editorial-brand-lockup span{font-size:.92rem}}
 @media (max-width:460px){.editorial-brand-lockup img{width:38px;height:38px}.editorial-brand-lockup span{font-size:.86rem}}
+
+
+/* BRENNAN BOUTIQUE V22 | Hero más compacto: se elimina marca duplicada */
+.editorial-copy{
+  padding-top:24px;
+  padding-bottom:24px;
+}
+
+@media (max-width:760px){
+  .editorial-copy{
+    padding-top:18px;
+    padding-bottom:18px;
+  }
+}
+
+@media (max-width:460px){
+  .editorial-copy{
+    padding-top:15px;
+    padding-bottom:16px;
+  }
+}
