@@ -1,5 +1,29 @@
 // BRENAN BOUTIQUE | Interacciones del catálogo y panel administrativo
 document.addEventListener('DOMContentLoaded', function () {
+  // Barrera visual para desalentar la inspección desde el menú contextual.
+  // No se aplica al panel administrativo para no interferir con su operación.
+  const isAdminArea = /\/admin(?:\/|$)/i.test(window.location.pathname);
+
+  if (!isAdminArea) {
+    document.addEventListener('contextmenu', function (event) {
+      event.preventDefault();
+    });
+
+    document.addEventListener('keydown', function (event) {
+      const key = String(event.key || '').toLowerCase();
+      const commandKey = event.ctrlKey || event.metaKey;
+      const blockedShortcut =
+        event.key === 'F12' ||
+        (commandKey && key === 'u') ||
+        (commandKey && event.shiftKey && ['i', 'j', 'c'].includes(key));
+
+      if (blockedShortcut) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    }, true);
+  }
+
   const activeCategoryChip = document.querySelector('[data-category-chips] .category-chip.is-active');
   if (activeCategoryChip) {
     window.requestAnimationFrame(function () {
