@@ -23,7 +23,7 @@ function checked(bool $condition): string
 
 function redirect(string $path): never
 {
-    header('Location: ' . BASE_URL . $path);
+    header('Location: ' . BASE_URL . $path, true, 303);
     exit;
 }
 
@@ -558,21 +558,36 @@ function upload_image(array $file): ?string
         throw new RuntimeException('No se pudo subir la imagen.');
     }
 
-    if ((int)($file['size'] ?? 0) > MAX_IMAGE_SIZE) {
+    $fileSize = (int)($file['size'] ?? 0);
+    if ($fileSize < 1 || $fileSize > MAX_IMAGE_SIZE) {
         throw new RuntimeException('La imagen excede el tamaño máximo permitido de 5 MB.');
     }
 
     $tmp = (string)($file['tmp_name'] ?? '');
+    if ($tmp === '' || !is_uploaded_file($tmp)) {
+        throw new RuntimeException('La carga de la imagen no es válida.');
+    }
+
     $info = @getimagesize($tmp);
     if ($info === false) {
         throw new RuntimeException('El archivo seleccionado no es una imagen válida.');
     }
 
+    $width = (int)($info[0] ?? 0);
+    $height = (int)($info[1] ?? 0);
+    if (
+        $width < 1 || $height < 1
+        || $width > MAX_IMAGE_EDGE || $height > MAX_IMAGE_EDGE
+        || ($width * $height) > MAX_IMAGE_PIXELS
+    ) {
+        throw new RuntimeException('La resolución de la imagen es demasiado grande.');
+    }
+
     $allowed = [
-        IMAGETYPE_JPEG => 'jpg',
-        IMAGETYPE_PNG  => 'png',
-        IMAGETYPE_WEBP => 'webp',
-        IMAGETYPE_GIF  => 'gif',
+        IMAGETYPE_JPEG => ['extension' => 'jpg', 'mimes' => ['image/jpeg']],
+        IMAGETYPE_PNG  => ['extension' => 'png', 'mimes' => ['image/png']],
+        IMAGETYPE_WEBP => ['extension' => 'webp', 'mimes' => ['image/webp']],
+        IMAGETYPE_GIF  => ['extension' => 'gif', 'mimes' => ['image/gif']],
     ];
 
     $type = (int)($info[2] ?? 0);
@@ -580,23 +595,36 @@ function upload_image(array $file): ?string
         throw new RuntimeException('Formato no permitido. Usa JPG, PNG, WEBP o GIF.');
     }
 
+    if (class_exists('finfo')) {
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $detectedMime = (string)$finfo->file($tmp);
+        if (!in_array($detectedMime, $allowed[$type]['mimes'], true)) {
+            throw new RuntimeException('El contenido del archivo no coincide con una imagen permitida.');
+        }
+    }
+
     if (!is_dir(UPLOAD_DIR) && !mkdir(UPLOAD_DIR, 0755, true) && !is_dir(UPLOAD_DIR)) {
         throw new RuntimeException('No fue posible crear la carpeta de imágenes.');
     }
 
-    $stem = date('YmdHis') . '-' . bin2hex(random_bytes(8));
+    $stem = date('YmdHis') . '-' . bin2hex(random_bytes(12));
 
     if (image_optimizer_available() && image_type_optimizer_supported($type)) {
-        return create_optimized_image_set($tmp, $type, $stem);
+        $filename = create_optimized_image_set($tmp, $type, $stem);
+        foreach (glob(upload_image_path($stem . '*')) ?: [] as $createdFile) {
+            @chmod($createdFile, 0644);
+        }
+        return $filename;
     }
 
-    // Respaldo para servidores sin GD: conserva el archivo original.
-    $filename = $stem . '.' . $allowed[$type];
+    // Respaldo para servidores sin GD. La ejecución de scripts está bloqueada en uploads.
+    $filename = $stem . '.' . $allowed[$type]['extension'];
     $destination = upload_image_path($filename);
 
     if (!move_uploaded_file($tmp, $destination)) {
         throw new RuntimeException('No fue posible guardar la imagen en el servidor.');
     }
+    @chmod($destination, 0644);
 
     return $filename;
 }

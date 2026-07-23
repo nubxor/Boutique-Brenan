@@ -123,6 +123,16 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
+
+  document.querySelectorAll('form[data-confirm]').forEach(function (form) {
+    form.addEventListener('submit', function (event) {
+      const message = form.getAttribute('data-confirm') || '¿Deseas continuar?';
+      if (!window.confirm(message)) {
+        event.preventDefault();
+      }
+    });
+  });
+
   document.querySelectorAll('[data-focus-search]').forEach(function (button) {
     button.addEventListener('click', function () {
       const search = document.querySelector('#busqueda-prendas');

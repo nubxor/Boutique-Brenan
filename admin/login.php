@@ -10,13 +10,14 @@ if (is_logged_in()) {
     redirect('/admin/index.php');
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     verify_csrf();
 
     $username = trim((string)($_POST['username'] ?? ''));
     $password = (string)($_POST['password'] ?? '');
+    $honeypot = trim((string)($_POST['website'] ?? ''));
 
-    if (login_admin($username, $password)) {
+    if ($honeypot === '' && login_admin($username, $password)) {
         redirect('/admin/index.php');
     }
 
@@ -30,17 +31,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$page_title = 'Acceso administrativo | Brenan Boutique';
+$page_title = 'Mi cuenta | Brennan Boutique';
 include __DIR__ . '/../includes/header.php';
 ?>
 
 <main class="login-screen">
   <form class="login-card" method="post" autocomplete="on">
     <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+    <label class="login-honeypot" aria-hidden="true">
+      <span>Sitio web</span>
+      <input type="text" name="website" tabindex="-1" autocomplete="off">
+    </label>
 
     <div class="logo large">BB</div>
-    <h1>Panel Brenan Boutique</h1>
-    <p>Acceso exclusivo para la administración del catálogo.</p>
+    <h1>Mi cuenta</h1>
+    <p>Acceso privado para actualizar las prendas y sus fotografías.</p>
 
     <?php if ($error): ?>
       <div class="alert danger" role="alert"><?= e($error) ?></div>
@@ -48,12 +53,12 @@ include __DIR__ . '/../includes/header.php';
 
     <label>
       <span>Usuario</span>
-      <input type="text" name="username" required autocomplete="username" autocapitalize="none" spellcheck="false">
+      <input type="text" name="username" maxlength="80" required autocomplete="username" autocapitalize="none" spellcheck="false">
     </label>
 
     <label>
       <span>Contraseña</span>
-      <input type="password" name="password" required autocomplete="current-password">
+      <input type="password" name="password" maxlength="200" required autocomplete="current-password">
     </label>
 
     <button class="btn primary block" type="submit">Entrar</button>

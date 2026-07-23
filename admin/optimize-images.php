@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ];
 }
 
-$page_title = 'Optimizar imágenes | Brenan Boutique';
+$page_title = 'Optimizar imágenes | Brennan Boutique';
 include __DIR__ . '/../includes/header.php';
 ?>
 
@@ -58,7 +58,7 @@ include __DIR__ . '/../includes/header.php';
     <a class="brand" href="<?= BASE_URL ?>/admin/index.php">
       <span class="logo">BB</span>
       <span>
-        <strong>Brenan Boutique</strong>
+        <strong>Brennan Boutique</strong>
         <small>Reparación y optimización de fotografías</small>
       </span>
     </a>

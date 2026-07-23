@@ -1,9 +1,15 @@
 <?php
 /**
- * BRENAN BOUTIQUE - CONFIGURACIÓN GENERAL
+ * BRENNAN BOUTIQUE - CONFIGURACIÓN GENERAL
  */
 
 declare(strict_types=1);
+
+// Producción: los errores se registran en el servidor, pero nunca se muestran al visitante.
+ini_set('display_errors', '0');
+ini_set('display_startup_errors', '0');
+ini_set('log_errors', '1');
+header_remove('X-Powered-By');
 
 function load_env(string $path): void
 {
@@ -52,7 +58,8 @@ function env(string $name, ?string $default = null): string
         }
         throw new RuntimeException("La variable de entorno {$name} no está definida.");
     }
-    return $value;
+
+    return (string)$value;
 }
 
 load_env(__DIR__ . '/.env');
@@ -68,14 +75,27 @@ define('BASE_URL', '');
 define('UPLOAD_DIR', __DIR__ . '/uploads');
 define('UPLOAD_URL', BASE_URL . '/uploads');
 define('MAX_IMAGE_SIZE', 5 * 1024 * 1024);
+define('MAX_IMAGE_PIXELS', 25_000_000);
+define('MAX_IMAGE_EDGE', 10_000);
 
-// Acceso administrativo. La contraseña se almacena únicamente como hash.
-define('ADMIN_USER', env('ADMIN_USER', 'admin'));
-define('ADMIN_PASSWORD_HASH', env('ADMIN_PASSWORD_HASH', '$2y$12$.0yhfd5PQfVkrm0XqOsZLeLj590X.oqGlT/vd.HctQdDa2V1m0KPe'));
+/*
+ * Acceso administrativo.
+ * Las variables del archivo .env tienen prioridad. El respaldo incluido es
+ * exclusivo de esta entrega y debe cambiarse después del primer acceso.
+ */
+define('ADMIN_USER', trim(env('ADMIN_USER', 'mi_cuenta')));
+define('ADMIN_PASSWORD_HASH', env('ADMIN_PASSWORD_HASH', '$2y$12$.Okf4mLzlkXA6W8B1lRYwu4CnoOdE/n7xbqdHVLcG8JMeu0IQuuWy'));
 
-// Protección del inicio de sesión.
+$passwordInfo = password_get_info(ADMIN_PASSWORD_HASH);
+if (ADMIN_USER === '' || (($passwordInfo['algoName'] ?? 'unknown') === 'unknown')) {
+    throw new RuntimeException('La configuración del acceso administrativo no es válida.');
+}
+
+// Protección del inicio de sesión y de la sesión administrativa.
 define('LOGIN_MAX_ATTEMPTS', 5);
 define('LOGIN_ATTEMPT_WINDOW', 15 * 60);
 define('LOGIN_LOCKOUT_SECONDS', 15 * 60);
 define('SESSION_IDLE_TIMEOUT', 30 * 60);
-define('SESSION_NAME', 'brenan_boutique_admin_session');
+define('SESSION_ABSOLUTE_TIMEOUT', 8 * 60 * 60);
+define('SESSION_REGENERATE_INTERVAL', 10 * 60);
+define('SESSION_NAME', 'brennan_boutique_account');

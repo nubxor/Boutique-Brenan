@@ -42,7 +42,7 @@ foreach (['XS','S','M','L','XL','XXL','Única'] as $defaultSize) {
     }
 }
 
-$page_title = ($id > 0 ? 'Editar prenda' : 'Agregar prenda') . ' | Brenan Boutique';
+$page_title = ($id > 0 ? 'Editar prenda' : 'Agregar prenda') . ' | Brennan Boutique';
 include __DIR__ . '/../includes/header.php';
 ?>
 
@@ -51,14 +51,17 @@ include __DIR__ . '/../includes/header.php';
     <a class="brand" href="<?= BASE_URL ?>/admin/index.php">
       <span class="logo">BB</span>
       <span>
-        <strong>Brenan Boutique</strong>
+        <strong>Brennan Boutique</strong>
         <small><?= $id > 0 ? 'Editar prenda' : 'Nueva prenda' ?></small>
       </span>
     </a>
 
     <div class="top-actions">
       <a class="btn" href="<?= BASE_URL ?>/admin/index.php">Volver</a>
-      <a class="btn danger" href="<?= BASE_URL ?>/admin/logout.php">Salir</a>
+      <form method="post" action="<?= BASE_URL ?>/admin/logout.php" class="inline-form">
+        <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+        <button class="btn danger" type="submit">Salir</button>
+      </form>
     </div>
   </div>
 </header>
@@ -73,7 +76,6 @@ include __DIR__ . '/../includes/header.php';
     <form class="dress-form" method="post" action="<?= BASE_URL ?>/admin/save.php" enctype="multipart/form-data">
       <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
       <input type="hidden" name="id" value="<?= (int)$dress['id'] ?>">
-      <input type="hidden" name="current_image" value="<?= e($dress['image']) ?>">
 
       <div class="form-grid">
         <div class="upload-box">
@@ -103,13 +105,13 @@ include __DIR__ . '/../includes/header.php';
         <div class="fields">
           <label>
             <span>Nombre o código</span>
-            <input type="text" name="name" value="<?= e($dress['name']) ?>" required placeholder="Ej. Prenda satín rosa">
+            <input type="text" name="name" maxlength="180" value="<?= e($dress['name']) ?>" required placeholder="Ej. Prenda satín rosa">
           </label>
 
           <div class="two">
             <label>
               <span>Categoría</span>
-              <input list="category-options" name="category" value="<?= e((string)$dress['category']) ?>" required placeholder="Vestidos">
+              <input list="category-options" name="category" maxlength="60" value="<?= e((string)$dress['category']) ?>" required placeholder="Vestidos">
               <datalist id="category-options">
                 <?php foreach ($categories as $category): ?>
                   <option value="<?= e($category) ?>">
@@ -119,7 +121,7 @@ include __DIR__ . '/../includes/header.php';
 
             <label>
               <span>Talla</span>
-              <input list="size-options" name="size" value="<?= e($dress['size']) ?>" required placeholder="M">
+              <input list="size-options" name="size" maxlength="30" value="<?= e($dress['size']) ?>" required placeholder="M">
               <datalist id="size-options">
                 <?php foreach ($sizes as $size): ?>
                   <option value="<?= e($size) ?>">

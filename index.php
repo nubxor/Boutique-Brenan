@@ -107,9 +107,7 @@ include __DIR__ . '/includes/header.php';
         <a class="icon-action" href="<?= BASE_URL ?>/index.php?view=favorites#catalogo" aria-label="Ver favoritos">
           <span aria-hidden="true">♡</span>
         </a>
-        <?php if (is_logged_in()): ?>
-          <a class="btn" href="<?= BASE_URL ?>/admin/index.php">Administrar</a>
-        <?php endif; ?>
+        <a class="account-access-link" href="<?= BASE_URL ?>/mi-cuenta.php">Mi cuenta</a>
       </div>
     </nav>
 

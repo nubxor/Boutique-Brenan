@@ -13,9 +13,18 @@ ensure_categories_schema($pdo);
 $stmt = $pdo->query("SELECT * FROM dresses ORDER BY created_at DESC");
 $dresses = $stmt->fetchAll();
 
-$message = (string)($_GET['message'] ?? '');
+$notice = (string)($_GET['notice'] ?? '');
+$messages = [
+    'created' => 'Prenda agregada correctamente.',
+    'updated' => 'Prenda actualizada correctamente.',
+    'deleted' => 'Prenda eliminada correctamente.',
+    'status' => 'Estado actualizado correctamente.',
+    'invalid' => 'La solicitud no es válida.',
+    'missing' => 'La prenda indicada ya no existe.',
+];
+$message = $messages[$notice] ?? '';
 
-$page_title = 'Panel administrativo | Brenan Boutique';
+$page_title = 'Panel administrativo | Brennan Boutique';
 include __DIR__ . '/../includes/header.php';
 ?>
 
@@ -24,14 +33,17 @@ include __DIR__ . '/../includes/header.php';
     <a class="brand" href="<?= BASE_URL ?>/index.php">
       <span class="logo">BB</span>
       <span>
-        <strong>Brenan Boutique</strong>
+        <strong>Brennan Boutique</strong>
         <small>Panel administrativo</small>
       </span>
     </a>
 
     <div class="top-actions">
       <a class="btn" href="<?= BASE_URL ?>/index.php" target="_blank">Ver catálogo</a>
-      <a class="btn danger" href="<?= BASE_URL ?>/admin/logout.php">Salir</a>
+      <form method="post" action="<?= BASE_URL ?>/admin/logout.php" class="inline-form">
+        <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+        <button class="btn danger" type="submit">Salir</button>
+      </form>
     </div>
   </div>
 </header>
@@ -105,7 +117,7 @@ include __DIR__ . '/../includes/header.php';
                     <button class="btn small soft" type="submit"><?= $dress['status'] === 'sold' ? 'Disponible' : 'Vendido' ?></button>
                   </form>
 
-                  <form method="post" action="<?= BASE_URL ?>/admin/delete.php" class="inline-form" onsubmit="return confirm('¿Eliminar esta prenda?');">
+                  <form method="post" action="<?= BASE_URL ?>/admin/delete.php" class="inline-form" data-confirm="¿Eliminar esta prenda?">
                     <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
                     <input type="hidden" name="id" value="<?= (int)$dress['id'] ?>">
                     <button class="btn small danger" type="submit">Eliminar</button>

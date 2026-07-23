@@ -11,19 +11,38 @@ $og_image_url = isset($og_image_url) ? trim((string)$og_image_url) : '';
 $og_type = isset($og_type) ? trim((string)$og_type) : 'website';
 
 header_remove('X-Powered-By');
-header('Cache-Control: no-cache, must-revalidate, max-age=0');
-header('Pragma: no-cache');
-header('Expires: 0');
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: SAMEORIGIN');
 header('Referrer-Policy: strict-origin-when-cross-origin');
 header('Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()');
 header('X-Permitted-Cross-Domain-Policies: none');
-header("Content-Security-Policy: default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; object-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; media-src 'self'; manifest-src 'self'");
+header('Cross-Origin-Opener-Policy: same-origin');
+header('Cross-Origin-Resource-Policy: same-origin');
 
 $isAdminPage = str_contains((string)($_SERVER['SCRIPT_NAME'] ?? ''), '/admin/');
+if ($isAdminPage) {
+    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+    header('Pragma: no-cache');
+    header('Expires: 0');
+    header('X-Robots-Tag: noindex, nofollow, noarchive', true);
+} else {
+    header('Cache-Control: no-cache, must-revalidate, max-age=0');
+    header('Pragma: no-cache');
+    header('Expires: 0');
+}
+
+if (function_exists('request_is_https') && request_is_https()) {
+    header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
+}
+
+$csp = "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; object-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; media-src 'self'; manifest-src 'self'";
+if (function_exists('request_is_https') && request_is_https()) {
+    $csp .= '; upgrade-insecure-requests';
+}
+header('Content-Security-Policy: ' . $csp);
+
 $cssPath = __DIR__ . '/../assets/css/styles.css';
-$cssVersion = 'v22-' . (is_file($cssPath) ? (string)filemtime($cssPath) : '1');
+$cssVersion = 'v23-' . (is_file($cssPath) ? (string)filemtime($cssPath) : '1');
 ?>
 <!doctype html>
 <html lang="es">

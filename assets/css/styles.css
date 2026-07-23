@@ -3743,3 +3743,78 @@ body{
     padding-bottom:16px;
   }
 }
+
+/* BRENNAN BOUTIQUE V23 | Acceso discreto y ajustes de seguridad */
+.account-access-link{
+  color:var(--muted);
+  font-size:.82rem;
+  font-weight:700;
+  text-decoration:none;
+  padding:8px 6px;
+  opacity:.78;
+  transition:opacity .18s ease, color .18s ease;
+}
+
+.account-access-link:hover,
+.account-access-link:focus-visible{
+  color:var(--brand-dark);
+  opacity:1;
+}
+
+.site-footer-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+}
+
+.site-footer-row p{
+  margin:0;
+}
+
+.footer-account-link{
+  color:inherit;
+  font-size:.78rem;
+  text-decoration:none;
+  opacity:.65;
+}
+
+.footer-account-link:hover,
+.footer-account-link:focus-visible{
+  opacity:1;
+  text-decoration:underline;
+}
+
+.login-honeypot{
+  position:absolute !important;
+  width:1px !important;
+  height:1px !important;
+  padding:0 !important;
+  margin:-1px !important;
+  overflow:hidden !important;
+  clip:rect(0,0,0,0) !important;
+  white-space:nowrap !important;
+  border:0 !important;
+}
+
+.inline-form button{
+  font:inherit;
+}
+
+@media (max-width:760px){
+  .topbar-editorial .top-actions-editorial{
+    width:auto;
+    align-self:flex-end;
+  }
+
+  .account-access-link{
+    font-size:.76rem;
+    padding:7px 3px;
+  }
+
+  .site-footer-row{
+    align-items:flex-start;
+    flex-direction:column;
+    gap:8px;
+  }
+}
