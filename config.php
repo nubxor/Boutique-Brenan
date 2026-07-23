@@ -83,8 +83,10 @@ define('MAX_IMAGE_EDGE', 10_000);
  * Las variables del archivo .env tienen prioridad. El respaldo incluido es
  * exclusivo de esta entrega y debe cambiarse después del primer acceso.
  */
-define('ADMIN_USER', trim(env('ADMIN_USER', 'mi_cuenta')));
-define('ADMIN_PASSWORD_HASH', env('ADMIN_PASSWORD_HASH', '$2y$12$.Okf4mLzlkXA6W8B1lRYwu4CnoOdE/n7xbqdHVLcG8JMeu0IQuuWy'));
+// Credenciales administrativas configuradas para esta instalación.
+// La contraseña se conserva únicamente como un hash irreversible.
+define('ADMIN_USER', 'Yadi');
+define('ADMIN_PASSWORD_HASH', '$2y$12$F5Hm0Bl7dGdcJZyWFVAQ1.pktQFLNWmHP3HEOPAaaO02kNSiHfOSW');
 
 $passwordInfo = password_get_info(ADMIN_PASSWORD_HASH);
 if (ADMIN_USER === '' || (($passwordInfo['algoName'] ?? 'unknown') === 'unknown')) {
